@@ -1,0 +1,552 @@
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+
+    background:
+    linear-gradient(
+        180deg,
+        #050816 0%,
+        #0b1020 40%,
+        #111827 75%,
+        #0d3b2e 100%
+    );
+
+    min-height:100vh;
+    padding-bottom:90px;
+    color:white;
+
+    position:relative;
+}
+
+body::after{
+    content:"";
+
+    position:fixed;
+
+    left:0;
+    right:0;
+    bottom:0;
+
+    height:5px;
+
+    background:
+    linear-gradient(
+        90deg,
+        #009c3b,
+        #ffdf00,
+        #002776
+    );
+
+    z-index:999;
+}
+
+/* =========================
+LOADING
+========================= */
+
+#loading{
+    padding:50px;
+    text-align:center;
+}
+
+/* =========================
+HEADER
+========================= */
+
+.header{
+    text-align:center;
+    padding:35px 20px 20px;
+}
+
+.header h1{
+    margin:0;
+    font-size:30px;
+}
+
+.header p{
+    margin-top:10px;
+    opacity:.75;
+}
+
+/* =========================
+ÁREAS
+========================= */
+
+.area{
+    margin:14px;
+}
+
+.area-title{
+
+    font-size:18px;
+    font-weight:bold;
+
+    margin-bottom:12px;
+
+    padding-left:4px;
+}
+
+/* =========================
+GRID
+========================= */
+
+.grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+    gap:10px;
+}
+
+/* =========================
+FIGURINHAS
+========================= */
+
+.card{
+
+    aspect-ratio:.72;
+
+    background:
+    rgba(255,255,255,.08);
+
+    backdrop-filter:blur(12px);
+
+    border:
+    1px solid rgba(255,255,255,.12);
+
+    border-radius:18px;
+
+    display:flex;
+    flex-direction:column;
+
+    justify-content:center;
+    align-items:center;
+
+    position:relative;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.card:hover{
+    transform:translateY(-2px);
+}
+
+.card:active{
+    transform:scale(.96);
+}
+
+.card.selected{
+
+    border:
+    2px solid #ffdf00;
+
+    box-shadow:
+    0 0 18px rgba(
+        255,
+        223,
+        0,
+        .45
+    );
+}
+
+.emoji{
+    font-size:36px;
+}
+
+.sticker-img{
+
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+    border-radius:14px;
+}
+
+.number{
+
+    position:absolute;
+
+    left:8px;
+    bottom:8px;
+
+    z-index:3;
+
+    font-size:11px;
+
+    color:white;
+
+    text-shadow:
+        0 0 4px rgba(0,0,0,.8);
+}
+.quantity{
+
+    position:absolute;
+
+    right:6px;
+    bottom:6px;
+
+    background:#009c3b;
+
+    color:white;
+
+    border-radius:999px;
+
+    padding:3px 7px;
+
+    font-size:11px;
+    font-weight:bold;
+}
+
+/* =========================
+BRILHANTE
+========================= */
+
+.shiny{
+
+    border:
+    2px solid #ffdf00;
+
+    box-shadow:
+    0 0 15px rgba(
+        255,
+        223,
+        0,
+        .25
+    );
+}
+
+.shiny-badge{
+
+    position:absolute;
+
+    top:6px;
+    right:6px;
+
+    font-size:14px;
+}
+
+/* =========================
+BOXES
+========================= */
+
+.card-box{
+
+    margin:20px;
+
+    padding:24px;
+
+    background:
+    rgba(255,255,255,.08);
+
+    backdrop-filter:blur(12px);
+
+    border:
+    1px solid rgba(255,255,255,.12);
+
+    border-radius:24px;
+}
+
+.card-box h2{
+    margin-top:0;
+}
+
+.card-box p{
+    opacity:.75;
+}
+
+/* =========================
+INPUTS
+========================= */
+
+input{
+
+    width:100%;
+
+    box-sizing:border-box;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    border:none;
+
+    margin-top:12px;
+
+    background:
+    rgba(255,255,255,.12);
+
+    color:white;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,.55);
+}
+
+/* =========================
+BOTÕES
+========================= */
+
+button{
+
+    width:100%;
+
+    border:none;
+
+    padding:14px;
+
+    margin-top:12px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:
+    linear-gradient(
+        135deg,
+        #009c3b,
+        #007a2f
+    );
+}
+
+/* =========================
+AMIGO
+========================= */
+
+.friend-result{
+
+    margin:20px;
+
+    padding:24px;
+
+    border-radius:24px;
+
+    background:
+    rgba(255,255,255,.08);
+
+    backdrop-filter:blur(12px);
+
+    border:
+    1px solid rgba(255,255,255,.12);
+}
+
+.friend-result h3{
+    margin-top:0;
+}
+
+/* =========================
+RESUMO
+========================= */
+
+#tradeSummary{
+
+    margin-bottom:20px;
+
+    line-height:1.8;
+}
+
+/* =========================
+MODAL
+========================= */
+
+.modal{
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+    rgba(0,0,0,.8);
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    padding:20px;
+
+    z-index:1000;
+}
+
+.hidden{
+    display:none;
+}
+
+.modal-content{
+
+    width:100%;
+    max-width:420px;
+
+    background:#111827;
+
+    border-radius:28px;
+
+    padding:24px;
+
+    text-align:center;
+
+    border:
+    1px solid rgba(
+        255,
+        255,
+        255,
+        .08
+    );
+}
+
+.modal-content h2{
+    margin-top:0;
+}
+
+/* =========================
+BOTTOM NAV
+========================= */
+
+.bottom-nav{
+
+    position:fixed;
+
+    bottom:0;
+    left:0;
+    right:0;
+
+    background:
+    rgba(5,8,22,.95);
+
+    backdrop-filter:blur(10px);
+
+    border-top:
+    1px solid rgba(
+        255,
+        255,
+        255,
+        .08
+    );
+
+    display:flex;
+
+    justify-content:space-around;
+
+    padding:12px;
+}
+
+.bottom-nav button{
+
+    width:auto;
+
+    background:none;
+
+    margin:0;
+
+    padding:0;
+
+    font-size:22px;
+}
+
+.bottom-nav .active{
+    transform:scale(1.15);
+}
+.back-btn{
+
+    width:auto;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    margin-left:20px;
+    margin-top:0;
+
+    padding:10px 14px;
+}
+.selected-preview{
+
+    margin:20px;
+
+    padding:18px;
+
+    border-radius:20px;
+
+    background:
+    rgba(255,255,255,.08);
+
+    backdrop-filter:blur(12px);
+
+    border:
+    1px solid rgba(255,255,255,.12);
+
+    text-align:center;
+}
+.friend-result{
+
+    text-align:center;
+}
+.friend-result h3{
+
+    font-size:22px;
+}
+.sticker-img{
+
+    width:100%;
+    height:100%;
+
+    object-fit:cover;
+
+    border-radius:16px;
+}
+
+.card{
+
+    overflow:hidden;
+}
+
+.preview-image,
+.summary-image,
+.success-image{
+
+    width:140px;
+    height:190px;
+
+    object-fit:cover;
+
+    border-radius:18px;
+
+    display:block;
+
+    margin:0 auto 12px;
+}
+
+.preview-shiny{
+
+    border:2px solid #ffdf00;
+
+    box-shadow:
+        0 0 15px rgba(255,223,0,.4),
+        0 0 30px rgba(255,223,0,.2);
+
+    animation:
+        shinePulse 2s infinite;
+}
+
+@keyframes shinePulse{
+
+    0%{
+        filter:brightness(1);
+    }
+
+    50%{
+        filter:brightness(1.15);
+    }
+
+    100%{
+        filter:brightness(1);
+    }
+}

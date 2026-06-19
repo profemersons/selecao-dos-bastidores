@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        Operação Copa - Álbum
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="album.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="../menu/menu.css">
+
+</head>
+
+<body>
+
+    <div id="loading">
+
+        Carregando álbum...
+
+    </div>
+
+    <div id="app" style="display:none;">
+
+        <header class="header">
+
+            <div class="player-card">
+
+                <div class="avatar" id="playerEmoji">
+                </div>
+
+                <div class="player-info">
+
+                    <h2 id="playerName">
+                    </h2>
+
+                    <p id="playerCourse">
+                    </p>
+
+                </div>
+
+            </div>
+
+           <div class="album-card">
+
+    <h2 class="album-title-main">
+        📖 Álbum de Profissões
+    </h2>
+
+    <div id="progressText" class="progress-count"></div>
+
+    <div class="progress">
+        <div id="progressFill"></div>
+    </div>
+
+    <div id="progressPercent" class="progress-percent"></div>
+
+</div>
+
+        </header>
+
+        <main id="albumContainer">
+        </main>
+
+    </div>
+
+    <div id="modal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <button id="closeModal">
+
+                ✕
+
+            </button>
+
+            <div id="modalBody">
+            </div>
+
+        </div>
+
+    </div>
+<nav class="menu-bar">
+
+    <button onclick="goAlbum()">
+        <span>📖</span>
+        <small>Álbum</small>
+    </button>
+
+    <button onclick="goPacks()">
+        <span>📦</span>
+        <small>Pacotes</small>
+    </button>
+
+    <button onclick="goMissions()">
+        <span>🎯</span>
+        <small>Missões</small>
+    </button>
+
+    <button class="center-btn" onclick="goTrades()">
+        <span>🔁</span>
+        <small>Trocas</small>
+    </button>
+
+    <button onclick="goProfile()">
+        <span>👤</span>
+        <small>Perfil</small>
+    </button>
+
+</nav>
+    <script src="../menu/menu.js"></script>
+    <script src="../shared/stats.js"></script>
+    <script src="../config.js"></script>
+    <script src="album.js">
+    </script>
+
+</body>
+
+</html>

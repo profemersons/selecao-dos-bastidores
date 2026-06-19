@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Operação Copa - Missões</title>
+
+    <link rel="stylesheet" href="missions.css">
+    <link rel="stylesheet" href="../menu/menu.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <!-- LOADING -->
+    <div id="loading">
+        Carregando missões...
+    </div>
+
+    <!-- APP -->
+    <div id="app" style="display:none">
+
+        <header class="header">
+            <h1>🎯 Missões</h1>
+            <p>Complete desafios e ganhe recompensas</p>
+        </header>
+
+        <main id="missionsContainer"></main>
+
+    </div>
+
+    <nav class="menu-bar">
+
+        <button onclick="goAlbum()">
+            <span>📖</span>
+            <small>Álbum</small>
+        </button>
+
+        <button onclick="goPacks()">
+            <span>📦</span>
+            <small>Pacotes</small>
+        </button>
+
+        <button onclick="goMissions()">
+            <span>🎯</span>
+            <small>Missões</small>
+        </button>
+
+        <button class="center-btn" onclick="goTrades()">
+            <span>🔁</span>
+            <small>Trocas</small>
+        </button>
+
+        <button onclick="goProfile()">
+            <span>👤</span>
+            <small>Perfil</small>
+        </button>
+
+    </nav>
+    <script src="../menu/menu.js"></script>
+    <script src="../config.js"></script>
+    <script src="../shared/stats.js"></script>
+    <script src="missions.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operação Copa - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- BOAS VINDAS -->
+        <section id="screen-welcome" class="screen active">
+
+            
+            <h1>Seleção dos Bastidores</h1>
+
+            <p id="slogan">
+                As estrelas que fazem a Copa acontecer.
+            </p>
+
+            <p style="font-size:14px;">
+                Descubra carreiras, colecione profissionais e monte o time que faz a Copa acontecer.
+            </p>
+
+            <input id="codeInput" maxlength="3" placeholder="Digite seu código de acesso">
+
+            <button onclick="verifyCode()">
+                Entrar no jogo
+            </button>
+
+            <p id="codeError" class="error"></p>
+
+        </section>
+
+        <!-- CADASTRO -->
+        <section id="screen-register" class="screen">
+
+            <h2>Receba sua Credencial</h2>
+
+            <div class="avatar-picker">
+
+                <input id="emojiInput" maxlength="2" placeholder="😀" autocomplete="off">
+
+                <span>
+                    Toque para escolher um emoji como seu avatar
+                </span>
+
+            </div>
+
+            <input id="nameInput" placeholder="Como você quer ser identificado?">
+
+            <select id="typeInput" onchange="loadAreas()">
+
+                <option value="">
+                    Qual é o seu perfil?
+                </option>
+
+                <option value="student">
+                    🎓 Aluno
+                </option>
+
+                <option value="employee">
+                    🏢 Funcionário
+                </option>
+
+            </select>
+
+            <select id="turmaSelect">
+
+                <option value="">
+                    Selecione primeiro
+                </option>
+
+            </select>
+
+            <input id="otherAreaInput" placeholder="Digite sua turma ou setor" style="display:none;">
+
+            <input id="pinInput" type="password" placeholder="Crie seu PIN de acesso (4 dígitos)">
+
+            <button onclick="register()">
+                Criar Conta
+            </button>
+
+        </section>
+
+        <!-- PIN -->
+        <section id="screen-pin" class="screen">
+
+            <h2>🎟️ Credencial encontrada</h2>
+            <div id="playerPreview"></div>
+
+            <input id="loginPin" type="password" placeholder="Informe seu PIN de acesso">
+
+            <button onclick="login()">
+                Acessar o Álbum
+            </button>
+
+            <p id="loginError" class="error"></p>
+
+        </section>
+
+    </div>
+
+    <div id="loading" class="loading hidden">
+        Carregando...
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>

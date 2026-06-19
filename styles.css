@@ -1,0 +1,344 @@
+/* =========================
+RESET
+========================= */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+:root{
+
+  --bg-dark:#07111f;
+  --bg-mid:#0f172a;
+  --bg-light:#111827;
+
+  --green:#22c55e;
+  --yellow:#facc15;
+  --blue:#2563eb;
+
+  --text:#ffffff;
+  --muted:#94a3b8;
+
+  --card:rgba(255,255,255,.08);
+}
+
+/* =========================
+BODY
+========================= */
+
+body{
+
+  min-height:100vh;
+
+  font-family:'Poppins',sans-serif;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  padding:20px;
+
+  color:var(--text);
+
+  background:
+
+  radial-gradient(
+    circle at bottom left,
+    rgba(34,197,94,.22),
+    transparent 30%
+  ),
+
+  radial-gradient(
+    circle at bottom center,
+    rgba(250,204,21,.15),
+    transparent 35%
+  ),
+
+  radial-gradient(
+    circle at bottom right,
+    rgba(37,99,235,.20),
+    transparent 30%
+  ),
+
+  linear-gradient(
+    180deg,
+    var(--bg-dark),
+    var(--bg-mid),
+    var(--bg-light)
+  );
+}
+
+/* =========================
+CONTAINER
+========================= */
+
+.container{
+
+  width:100%;
+  max-width:420px;
+}
+
+/* =========================
+TELAS
+========================= */
+
+.screen{
+
+  display:none;
+
+  background:var(--card);
+
+  backdrop-filter:blur(20px);
+
+  border:1px solid
+  rgba(255,255,255,.08);
+
+  border-radius:28px;
+
+  padding:32px 24px;
+
+  box-shadow:
+  0 20px 60px
+  rgba(0,0,0,.35);
+}
+
+.screen.active{
+  display:block;
+}
+
+/* =========================
+TÍTULOS
+========================= */
+
+h1{
+
+  font-size:38px;
+  font-weight:700;
+  text-align: center;
+
+  margin-bottom:10px;
+}
+#slogan{
+  text-align: center;
+}
+h2{
+
+  margin-bottom:15px;
+}
+
+p{
+
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+#playerPreview{
+
+  margin-bottom:20px;
+}
+
+#playerPreview h2{
+
+  margin-bottom:5px;
+}
+
+/* =========================
+INPUTS
+========================= */
+
+input{
+
+  width:100%;
+
+  padding:16px;
+
+  margin-bottom:12px;
+
+  border:none;
+  outline:none;
+
+  border-radius:16px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  color:white;
+
+  font-size:15px;
+}
+
+input::placeholder{
+
+  color:#94a3b8;
+}
+select{
+
+  width:100%;
+
+  padding:16px;
+
+  margin-bottom:12px;
+
+  border:none;
+  outline:none;
+
+  border-radius:16px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  color:white;
+
+  font-size:15px;
+
+  cursor:pointer;
+
+  appearance:none;
+}
+
+select option{
+
+  background:#0f172a;
+
+  color:white;
+}
+
+/* =========================
+BOTÕES
+========================= */
+
+button{
+
+  width:100%;
+
+  padding:16px;
+
+  border:none;
+
+  border-radius:16px;
+
+  cursor:pointer;
+
+  font-weight:700;
+  font-size:15px;
+
+  color:white;
+
+  background:
+  linear-gradient(
+    180deg,
+    #3b82f6,
+    #2563eb
+  );
+
+  transition:.25s;
+}
+
+button:hover{
+
+  transform:
+  translateY(-2px);
+
+  box-shadow:
+  0 12px 30px
+  rgba(37,99,235,.45);
+}
+
+/* =========================
+ERROS
+========================= */
+
+.error{
+
+  margin-top:12px;
+
+  color:#f87171;
+
+  font-size:14px;
+}
+
+/* =========================
+LOADING
+========================= */
+
+.loading{
+
+  position:fixed;
+  inset:0;
+
+  background:
+  rgba(7,17,31,.85);
+
+  backdrop-filter:
+  blur(8px);
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  font-size:22px;
+  font-weight:600;
+
+  z-index:999;
+}
+
+.hidden{
+  display:none;
+}
+
+/* =========================
+RESPONSIVO
+========================= */
+
+@media(max-width:480px){
+
+  h1{
+    font-size:32px;
+  }
+
+  .screen{
+    padding:28px 20px;
+  }
+}
+
+.avatar-picker{
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+
+  margin-bottom:20px;
+}
+
+#emojiInput{
+
+  width:120px;
+  height:120px;
+
+  border-radius:30px;
+
+  text-align:center;
+
+  font-size:60px;
+
+  padding:0;
+
+  margin-bottom:10px;
+
+  background:
+  rgba(255,255,255,.08);
+
+  border:
+  2px solid
+  rgba(255,255,255,.1);
+}
+
+.avatar-picker span{
+
+  color:var(--muted);
+
+  font-size:13px;
+}
+

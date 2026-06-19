@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        Central de Ilustrações
+    </title>
+
+    <link rel="stylesheet" href="upload.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body>
+
+    <header class="header">
+
+        <h1>
+            🎨 Central de Ilustrações
+        </h1>
+
+        <p>
+            Operação Copa
+        </p>
+
+    </header>
+
+    <div id="loading">
+
+        Carregando...
+
+    </div>
+
+    <main id="app" style="display:none;">
+
+       <div class="filters">
+
+    <button onclick="setFilter('all')">
+        🎨 Todas
+    </button>
+
+    <button onclick="setFilter('pending')">
+        🟡 Pendentes
+    </button>
+
+    <button onclick="setFilter('done')">
+        ✅ Ilustradas
+    </button>
+
+</div>
+
+        <div id="stats">
+        </div>
+
+        <div id="stickersGrid">
+        </div>
+
+    </main>
+
+    <div id="modal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <button id="closeModal">
+                ✕
+            </button>
+
+            <h2 id="modalTitle">
+            </h2>
+
+            <input id="illustratorName" placeholder="Nome do ilustrador">
+
+            <input id="illustratorSocial" placeholder="@instagram ou @tiktok (opcional)">
+
+            <input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp">
+
+            <button id="uploadButton">
+
+                Enviar Arte
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <script src="../config.js"></script>
+    <script src="upload.js"></script>
+
+</body>
+
+</html>

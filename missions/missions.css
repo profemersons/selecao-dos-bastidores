@@ -1,0 +1,65 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f8ff;
+    padding-bottom: 80px;
+}
+
+.header {
+    text-align: center;
+    padding: 20px;
+}
+
+#missionsContainer {
+    padding: 15px;
+}
+
+.mission {
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.mission h3 {
+    margin: 0 0 8px 0;
+}
+
+.mission p {
+    margin: 0 0 12px 0;
+    opacity: 0.8;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #2f80ed;
+    color: white;
+    width: 100%;
+    cursor: pointer;
+}
+
+button:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+.menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    background: white;
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+.menu button {
+    background: none;
+    color: black;
+    font-size: 14px;
+}

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sustentabilidade - Copa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at bottom left, rgba(34, 197, 94, .22), transparent 30%),
+                radial-gradient(circle at bottom center, rgba(250, 204, 21, .15), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(37, 99, 235, .20), transparent 30%),
+                linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        /* Container do Jogo limitando tamanho de tela mobile */
+        #game-wrapper {
+            width: 100%;
+            max-width: 430px;
+            height: 92vh;
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top HUD baseado no seu estilo .player e .card */
+        .hud-header {
+            padding: 15px;
+            background: var(--card);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            z-index: 10;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, .05);
+            border-radius: 14px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-box small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        /* Alvo em Evidência */
+        #target-banner {
+            background: rgba(37, 99, 235, 0.2);
+            border: 1px solid rgba(37, 99, 235, 0.4);
+            border-radius: 16px;
+            margin-top: 10px;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        #target-emojis {
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+
+        /* Área de queda dos itens */
+        #game-space {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Estilo dos Emojis Caindo */
+        .falling-emoji {
+            position: absolute;
+            font-size: 38px;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            animation: spawnPop 0.15s ease-out;
+            touch-action: manipulation;
+        }
+
+        @keyframes spawnPop {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* Telas de Interface (Modais) baseadas nas suas classes */
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+        }
+
+        .screen-content h2 {
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .screen-content p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .big-code {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--yellow);
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 16px;
+            margin: 15px 0;
+            border: 1px dashed rgba(250, 204, 21, 0.4);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div class="hud-header">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <small>PONTOS</small>
+                <span id="score-txt" style="color: var(--green);">0</span>
+            </div>
+            <div class="stat-box">
+                <small>TURNO</small>
+                <span id="round-txt">1/3</span>
+            </div>
+            <div class="stat-box">
+                <small>TEMPO</small>
+                <span id="time-txt" style="color: var(--yellow);">15s</span>
+            </div>
+        </div>
+
+        <div id="target-banner">
+            <div>COLETE: <span id="target-type-name">---</span></div>
+            <div id="target-emojis"></div>
+        </div>
+    </div>
+
+    <div id="game-space"></div>
+
+    <div id="modal-start" class="screen-overlay">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">♻️</div>
+            <h2>Gestão Ambiental</h2>
+            <p>Os estádios da Copa geram toneladas de resíduos! Sua missão na equipe de sustentabilidade é limpar tudo em 3 turnos frenéticos de 15s.</p>
+            <p><strong>Atenção:</strong> Toque APENAS nos tipos em evidência. Erros tiram pontos e o lixo vai cair cada vez mais rápido!</p>
+            <button onclick="startRound()">Iniciar Turno 1</button>
+        </div>
+    </div>
+
+    <div id="modal-rest" class="screen-overlay hidden">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">⏳</div>
+            <h2>Turno Concluído!</h2>
+            <p>Excelente agilidade! Respire fundo, o próximo turno aumentará consideravelmente a velocidade.</p>
+            <h3 id="rest-timer" style="color: var(--yellow); font-size: 24px;">Descanso: 5s</h3>
+        </div>
+    </div>
+
+    <div id="modal-end" class="screen-overlay hidden">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
+            <h2>Estádio Impecável!</h2>
+            <p>Seu trabalho nos bastidores garantiu a pontuação mínima! Resgate seu pacote de figurinhas com o código abaixo:</p>
+            <div class="big-code" id="reward-code">------</div>
+            <button onclick="restartGame()">Jogar Novamente</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configuração das Categorias com listas de Emojis dedicadas
+    const categorias = [
+        { nome: 'PAPEL', emojis: ['📄', '🧻', '📦', '📰'], cor: 'rgba(37, 99, 235, 0.2)', borda: 'rgba(37, 99, 235, 0.5)' },
+        { nome: 'PLÁSTICO', emojis: ['🥤', '🍼', '🛍️', '🪣'], cor: 'rgba(239, 68, 68, 0.2)', borda: 'rgba(239, 68, 68, 0.5)' },
+        { nome: 'METAL', emojis: ['🥫', '⚱️', '🍴', '🧲'], cor: 'rgba(250, 204, 21, 0.2)', borda: 'rgba(250, 204, 21, 0.5)' },
+        { nome: 'ORGANICO', emojis: ['🍏', '🍌', '🍉', '🦴'], cor: 'rgba(139, 92, 26, 0.2)', borda: 'rgba(139, 92, 26, 0.5)' },
+        { nome: 'ELETRONICO', emojis: ['💻', '📱', '🔋', '🔌'], cor: 'rgba(148, 163, 184, 0.2)', borda: 'rgba(148, 163, 184, 0.5)' }
+    ];
+
+    const gameSpace = document.getElementById('game-space');
+    const scoreTxt = document.getElementById('score-txt');
+    const roundTxt = document.getElementById('round-txt');
+    const timeTxt = document.getElementById('time-txt');
+    const targetTypeName = document.getElementById('target-type-name');
+    const targetEmojisDiv = document.getElementById('target-emojis');
+    const targetBanner = document.getElementById('target-banner');
+
+    // Modais
+    const modalStart = document.getElementById('modal-start');
+    const modalRest = document.getElementById('modal-rest');
+    const modalEnd = document.getElementById('modal-end');
+    const restTimerTxt = document.getElementById('rest-timer');
+    const rewardCodeTxt = document.getElementById('reward-code');
+
+    let score = 0;
+    let currentRound = 0;
+    let roundTimeLeft = 15;
+    let gameActive = false;
+
+    // Loops auxiliares
+    let loopFisica;
+    let loopCronometro;
+    let timeoutSpawn;
+
+    // Variáveis de Balanço de Dificuldade (Frenético)
+    let dbCategoriasTurno = []; 
+    let categoriaAlvo = null;
+    let spawnSpeed = 600;  // Velocidade de criação (ms)
+    let fallSpeed = 3.5;   // Velocidade de queda de pixels por frame
+
+    function startRound() {
+        currentRound++;
+        modalStart.classList.add('hidden');
+        modalRest.classList.add('hidden');
+        gameActive = true;
+
+        roundTimeLeft = 15;
+        roundTxt.innerText = `${currentRound}/3`;
+        timeTxt.innerText = `${roundTimeLeft}s`;
+
+        // ESCALONAMENTO BRUTAL DE DIFICULDADE POR TURNO:
+        if (currentRound === 1) {
+            spawnSpeed = 500;  // 2 itens por segundo
+            fallSpeed = 4;
+        } else if (currentRound === 2) {
+            spawnSpeed = 300;  // ~3.3 itens por segundo
+            fallSpeed = 6;
+        } else if (currentRound === 3) {
+            spawnSpeed = 150;  // Caos total: ~7 itens caindo por segundo!
+            fallSpeed = 8.5;
+        }
+
+        // Escolhe 3 categorias aleatórias para participar do turno
+        let embaralhado = [...categorias].sort(() => 0.5 - Math.random());
+        dbCategoriasTurno = embaralhado.slice(0, 3);
+
+        // Define qual delas é o alvo pedido
+        categoriaAlvo = dbCategoriasTurno[Math.floor(Math.random() * dbCategoriasTurno.length)];
+
+        // Atualiza painel visual do Alvo
+        targetTypeName.innerText = categoriaAlvo.nome;
+        targetEmojisDiv.innerText = categoriaAlvo.emojis.join('');
+        targetBanner.style.background = categoriaAlvo.cor;
+        targetBanner.style.borderColor = categoriaAlvo.borda;
+
+        // Inicia loops de execução
+        loopFisica = setInterval(updatePhysics, 1000 / 60); // 60 FPS estável
+        loopCronometro = setInterval(updateTimer, 1000);
+        spawnManager();
+    }
+
+    function spawnManager() {
+        if (!gameActive) return;
+
+        // Escolhe uma categoria do jogo e pega um emoji aleatório dela
+        let catSorteada = dbCategoriasTurno[Math.floor(Math.random() * dbCategoriasTurno.length)];
+        let emojiSorteado = catSorteada.emojis[Math.floor(Math.random() * catSorteada.emojis.length)];
+
+        let el = document.createElement('div');
+        el.className = 'falling-emoji';
+        el.innerText = emojiSorteado;
+        el.dataset.categoria = catSorteada.nome;
+
+        // Distribuição horizontal inteligente na tela mobile
+        let maxX = gameSpace.offsetWidth - 50;
+        el.style.left = `${Math.random() * maxX}px`;
+        el.style.top = `-50px`;
+
+        // Eventos Touch ultra-responsivos
+        el.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            clickItem(el);
+        });
+        el.addEventListener('mousedown', function() {
+            clickItem(el);
+        });
+
+        gameSpace.appendChild(el);
+
+        // Aceleração interna: Conforme o próprio tempo do turno acaba, o spawn fica ainda mais rápido
+        let variacaoInterna = Math.max(100, spawnSpeed - ((15 - roundTimeLeft) * 15));
+        timeoutSpawn = setTimeout(spawnManager, variacaoInterna);
+    }
+
+    function clickItem(el) {
+        if (!gameActive) return;
+
+        if (el.dataset.categoria === categoriaAlvo.nome) {
+            score += 15;
+            // Efeito visual rápido de acerto verde
+            scoreTxt.style.color = '#22c55e';
+        } else {
+            score = Math.max(0, score - 20); // Punição severa por erro
+            scoreTxt.style.color = '#ef4444';
+        }
+        scoreTxt.innerText = score;
+        el.remove();
+    }
+
+    function updatePhysics() {
+        let itens = document.querySelectorAll('.falling-emoji');
+        let alturaLimite = gameSpace.offsetHeight;
+
+        itens.forEach(item => {
+            let topAtual = parseFloat(item.style.top);
+            // Cada turno cai progressivamente mais rápido
+            item.style.top = `${topAtual + fallSpeed}px`;
+
+            // Se sair da tela por baixo
+            if (topAtual > alturaLimite) {
+                // Se o aluno deixar passar o lixo ALVO, ele perde um pouco de ponto por negligência
+                if (item.dataset.categoria === categoriaAlvo.nome) {
+                    score = Math.max(0, score - 5);
+                    scoreTxt.innerText = score;
+                    scoreTxt.style.color = '#facc15';
+                }
+                item.remove();
+            }
+        });
+    }
+
+    function updateTimer() {
+        roundTimeLeft--;
+        timeTxt.innerText = `${roundTimeLeft}s`;
+
+        if (roundTimeLeft <= 0) {
+            clearTurnLoops();
+            
+            if (currentRound < 3) {
+                // Modo Descanso
+                let descansoTempo = 5;
+                restTimerTxt.innerText = `Descanso: ${descansoTempo}s`;
+                modalRest.classList.remove('hidden');
+
+                let intervaloDescanso = setInterval(() => {
+                    descansoTempo--;
+                    restTimerTxt.innerText = `Descanso: ${descansoTempo}s`;
+                    if (descansoTempo <= 0) {
+                        clearInterval(intervaloDescanso);
+                        startRound();
+                    }
+                }, 1000);
+            } else {
+                // Fim dos 3 Turnos
+                showVictoryScreen();
+            }
+        }
+    }
+
+    function clearTurnLoops() {
+        gameActive = false;
+        clearInterval(loopFisica);
+        clearInterval(loopCronometro);
+        clearTimeout(timeoutSpawn);
+        // Limpa a tela para o próximo round
+        gameSpace.innerHTML = '';
+    }
+
+    function showVictoryScreen() {
+        // Gera um código dinâmico baseado nas iniciais de sustentabilidade e pontos
+        rewardCodeTxt.innerText = `ECO-${score}-${Math.floor(100 + Math.random() * 900)}`;
+        modalEnd.classList.remove('hidden');
+    }
+
+    function restartGame() {
+        score = 0;
+        currentRound = 0;
+        scoreTxt.innerText = score;
+        scoreTxt.style.color = 'var(--green)';
+        modalEnd.classList.add('hidden');
+        modalStart.classList.remove('hidden');
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        Operação Copa - Trocas
+    </title>
+
+    <link rel="stylesheet" href="trades.css">
+    <link rel="stylesheet" href="../menu/menu.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body>
+
+    <div id="loading">
+
+        Carregando trocas...
+
+    </div>
+
+    <div id="app" style="display:none;">
+
+        <header class="header">
+
+            <h1>🔄 Enviar Figurinha</h1>
+
+            <p id="stepText">
+                Escolha a figurinha que deseja enviar
+            </p>
+
+
+        </header>
+
+        <!-- PASSO 1 -->
+
+        <main id="step1">
+
+            <div id="albumContainer"></div>
+
+        </main>
+
+        <!-- PASSO 2 -->
+
+        <div id="selectedStickerPreview" class="selected-preview"></div>
+
+        <main id="step2" style="display:none;">
+
+            <button class="back-btn" onclick="backToStep1()">
+                ← Voltar
+            </button>
+
+            <div class="card-box">
+
+                <h2>
+                    👤 Destinatário
+                </h2>
+
+                <p>
+                    Digite o código do jogador
+                </p>
+
+                <input id="friendCode" placeholder="Ex: ABC123">
+
+                <button onclick="searchFriend()">
+
+                    Buscar Jogador
+
+                </button>
+
+            </div>
+
+            <div id="friendResult" class="friend-result" style="display:none;">
+            </div>
+
+        </main>
+
+        <!-- PASSO 3 -->
+
+        <main id="step3" style="display:none;">
+            <button class="back-btn" onclick="backToStep2()">
+                ← Voltar
+            </button>
+
+            <div class="card-box">
+
+                <h2>
+                    📤 Confirmar Envio
+                </h2>
+
+                <div id="tradeSummary"></div>
+
+                <input id="pinInput" type="password" maxlength="4" placeholder="Digite seu PIN">
+
+                <button onclick="confirmTrade()">
+
+                    Enviar Figurinha
+
+                </button>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- SUCESSO -->
+
+    <div id="successModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <h2>
+                👋 Tchau figurinha!
+            </h2>
+
+            <div id="successContent"></div>
+
+            <button onclick="closeSuccess()">
+
+                Fechar
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <nav class="menu-bar">
+
+        <button onclick="goAlbum()">
+            <span>📖</span>
+            <small>Álbum</small>
+        </button>
+
+        <button onclick="goPacks()">
+            <span>📦</span>
+            <small>Pacotes</small>
+        </button>
+
+        <button onclick="goMissions()">
+            <span>🎯</span>
+            <small>Missões</small>
+        </button>
+
+        <button class="center-btn" onclick="goTrades()">
+            <span>🔁</span>
+            <small>Trocas</small>
+        </button>
+
+        <button onclick="goProfile()">
+            <span>👤</span>
+            <small>Perfil</small>
+        </button>
+
+    </nav>
+
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+    <script src="../shared/stats.js"></script>
+    <script src="trades.js"></script>
+
+</body>
+
+</html>

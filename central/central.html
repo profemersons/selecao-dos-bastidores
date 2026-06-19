@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>🏆 Central da Copa</title>
+
+    <link
+        rel="stylesheet"
+        href="central.css"
+    >
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+    <!-- Config do projeto -->
+    <script src="../config.js"></script>
+
+</head>
+
+<body>
+
+    <!-- FUNDO -->
+
+    <div class="background-glow"></div>
+
+    <!-- HEADER -->
+
+    <header class="hero">
+
+        <div class="hero-left">
+
+            <h1>
+                🏆 CENTRAL DA COPA
+            </h1>
+
+            <p>
+                Operação Copa • Painel Oficial
+            </p>
+
+        </div>
+
+        <div class="hero-right">
+
+            <div id="clock">
+                --:--
+            </div>
+
+            <div id="lastUpdate">
+                Atualizando...
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- TÍTULO DO RANKING -->
+
+    <section class="section-indicator">
+
+        <span id="sectionTitle">
+            Carregando ranking...
+        </span>
+
+    </section>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+
+    <main>
+
+        <section
+            id="screenContainer"
+            class="screen-container"
+        >
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ -->
+
+    <footer>
+
+        <span>
+            🇧🇷 Operação Copa • SENAC
+        </span>
+
+    </footer>
+
+    <script src="central.js"></script>
+
+</body>
+
+</html>
