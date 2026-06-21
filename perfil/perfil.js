@@ -5,7 +5,7 @@ const player = JSON.parse(
 if (!player) {
     window.location.href = "../index.html";
 }
-
+let qrScanner = null;
 init();
 
 /* =========================
@@ -70,12 +70,13 @@ async function loadStats() {
         await client
             .from("players")
             .select(`
-                points,
-                unique_count,
-                shiny_count,
-                trade_count,
-                friend_count
-            `)
+    points,
+    unique_count,
+    shiny_count,
+    total_stickers,
+    trade_count,
+    friend_count
+`)
             .eq("id", player.id)
             .single();
 
@@ -95,6 +96,10 @@ async function loadStats() {
         "shinyStickers"
     ).textContent =
         currentPlayer.shiny_count || 0;
+    document.getElementById(
+        "totalStickers"
+    ).textContent =
+        currentPlayer.total_stickers || 0;
 
     document.getElementById(
         "friendsCount"
@@ -119,6 +124,9 @@ MODAIS
 document.getElementById("addFriendBtn").onclick = () => {
     document.getElementById("friendModal").classList.remove("hidden");
 };
+document.getElementById(
+    "scanFriendBtn"
+).onclick = openQrScanner;
 
 function closeFriendModal() {
     document.getElementById("friendModal").classList.add("hidden");
@@ -146,59 +154,11 @@ AMIGOS
 async function addFriend() {
 
     const code =
-        document.getElementById("friendCode").value.trim().toUpperCase();
+        document
+            .getElementById("friendCode")
+            .value;
 
-    if (!code) {
-        alert("Digite um código.");
-        return;
-    }
-
-    if (code === player.code) {
-        alert("Você não pode adicionar a si mesmo.");
-        return;
-    }
-
-    const { data: friend } =
-        await client
-            .from("players")
-            .select("*")
-            .eq("code", code)
-            .single();
-
-    if (!friend) {
-        alert("Jogador não encontrado.");
-        return;
-    }
-
-    const { data: existing } =
-        await client
-            .from("friends")
-            .select("*");
-
-    const already =
-        existing.some(f =>
-            (f.player_a === player.id && f.player_b === friend.id) ||
-            (f.player_a === friend.id && f.player_b === player.id)
-        );
-
-    if (already) {
-        alert("Esse amigo já foi adicionado.");
-        return;
-    }
-
-    await client
-        .from("friends")
-        .insert([
-            {
-                player_a: player.id,
-                player_b: friend.id
-            }
-        ]);
-
-    await updateFriendCount(player.id);
-    await updateFriendCount(friend.id);
-
-    alert(`Agora você é amigo de ${friend.name}!`);
+    await addFriendByCode(code);
 }
 
 /* =========================
@@ -337,14 +297,18 @@ async function removeFriend(friendshipId) {
 
 async function updateFriendCount(playerId) {
 
-    const { data } = await client
+    const { data, error } = await client
         .from("friends")
-        .select("player_a, player_b");
+        .select("id")
+        .or(`player_a.eq.${playerId},player_b.eq.${playerId}`);
 
-    const count = (data || []).filter(f =>
-        f.player_a === playerId ||
-        f.player_b === playerId
-    ).length;
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const count =
+        data?.length || 0;
 
     await client
         .from("players")
@@ -352,4 +316,141 @@ async function updateFriendCount(playerId) {
             friend_count: count
         })
         .eq("id", playerId);
+}
+async function openQrScanner() {
+
+    document
+        .getElementById("qrModal")
+        .classList
+        .remove("hidden");
+
+    qrScanner =
+        new Html5Qrcode("reader");
+
+try {
+
+    await qrScanner.start(
+
+        {
+            facingMode: "environment"
+        },
+
+        {
+            fps: 10,
+            qrbox: 250
+        },
+
+        async (decodedText) => {
+
+            await qrScanner.stop();
+
+            closeQrModal();
+
+            await addFriendByCode(
+                decodedText
+            );
+        }
+
+    );
+
+} catch (error) {
+
+    console.log(
+        "Usuário cancelou câmera"
+    );
+
+    closeQrModal();
+}
+}
+async function closeQrModal() {
+
+    if (qrScanner) {
+
+        try {
+
+            await qrScanner.stop();
+
+        } catch {}
+
+        qrScanner = null;
+    }
+
+    document
+        .getElementById("qrModal")
+        .classList
+        .add("hidden");
+}
+async function addFriendByCode(code) {
+
+    code = code.trim().toUpperCase();
+
+    if (code === player.code) {
+
+        alert(
+            "Você não pode adicionar a si mesmo."
+        );
+
+        return;
+    }
+
+    const { data: friend } =
+        await client
+            .from("players")
+            .select("*")
+            .eq("code", code)
+            .single();
+
+    if (!friend) {
+
+        alert(
+            "Jogador não encontrado."
+        );
+
+        return;
+    }
+
+    const { data: existing } =
+        await client
+            .from("friends")
+            .select("*");
+
+    const already =
+        existing.some(f =>
+
+            (f.player_a === player.id &&
+             f.player_b === friend.id)
+
+            ||
+
+            (f.player_a === friend.id &&
+             f.player_b === player.id)
+        );
+
+    if (already) {
+
+        alert(
+            "Esse amigo já foi adicionado."
+        );
+
+        return;
+    }
+
+    await client
+        .from("friends")
+        .insert([
+            {
+                player_a: player.id,
+                player_b: friend.id
+            }
+        ]);
+
+    await updateFriendCount(player.id);
+
+    await updateFriendCount(friend.id);
+
+    await loadStats();
+
+    alert(
+        `Agora você é amigo de ${friend.name}!`
+    );
 }

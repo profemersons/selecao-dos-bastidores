@@ -7,7 +7,7 @@
     <title>Operação Copa - Perfil</title>
 
     <link rel="stylesheet" href="perfil.css">
-    
+
 
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -123,6 +123,10 @@
                         ➕ Adicionar amigo
                     </button>
 
+                    <button id="scanFriendBtn">
+                        📷 Escanear QR
+                    </button>
+
                     <button id="viewFriendsBtn">
                         📋 Ver lista
                     </button>
@@ -180,13 +184,17 @@
 
         <div class="modal-content">
 
-            <h3>🤝 Seus Amigos</h3>
+            <div class="modal-header">
+
+                <h3>🤝 Seus Amigos</h3>
+
+                <button class="close-btn" onclick="closeFriendsList()">
+                    ✕
+                </button>
+
+            </div>
 
             <div id="friendsList"></div>
-
-            <button onclick="closeFriendsList()">
-                Fechar
-            </button>
 
         </div>
 
@@ -214,9 +222,26 @@
 
     </div>
 
+    <div id="qrModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <h3>📷 Escaneie o QR do amigo</h3>
+
+            <div id="reader"></div>
+
+            <button onclick="closeQrModal()">
+                Fechar
+            </button>
+
+        </div>
+
+    </div>
+
     <script src="../config.js"></script>
     <script src="../menu/menu.js"></script>
     <script src="../shared/stats.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="perfil.js"></script>
 
 </body>
