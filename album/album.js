@@ -276,8 +276,8 @@ function openSticker(
       </p>
 
       <p class="illustrator">
-    Ilustrada por ${sticker.illustrator || "desconhecido"}
-</p>
+    🎨 Ilustrada por ${sticker.illustrator || "desconhecido"}
+</p> <br> 
     `;
     }
 
