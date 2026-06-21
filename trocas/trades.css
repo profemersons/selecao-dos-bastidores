@@ -550,3 +550,29 @@ BOTTOM NAV
         filter:brightness(1);
     }
 }
+#reader {
+
+    width: 100%;
+
+    max-width: 350px;
+
+    margin: 0 auto;
+}
+
+.found-card {
+
+    text-align: center;
+
+    padding: 20px;
+}
+
+.big-avatar {
+    font-size: 60px;
+    margin-bottom: 10px;
+}
+
+.ok-msg {
+    margin: 10px 0;
+    color: #22c55e;
+    font-weight: bold;
+}

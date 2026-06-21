@@ -7,6 +7,7 @@ if (!player) {
         "../index.html";
 }
 
+let qrScanner = null;
 let selectedSticker = null;
 let selectedInventory = null;
 let friend = null;
@@ -44,6 +45,22 @@ async function init() {
         "app"
     ).style.display = "block";
 }
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const btn =
+            document.getElementById(
+                "scanQrBtn"
+            );
+
+        if (btn) {
+
+            btn.onclick =
+                openQrScanner;
+        }
+    }
+);
 
 /* =========================
 PASSO 1
@@ -331,28 +348,47 @@ async function searchFriend() {
 
     friend = data;
 
-    const result =
-        document.getElementById(
-            "friendResult"
-        );
+const modal =
+    document.getElementById("playerFoundModal");
 
-    result.style.display =
-        "block";
+const content =
+    document.getElementById("playerFoundContent");
 
-    result.innerHTML = `
-        <h3>
+content.innerHTML = `
+    <div class="found-card">
+
+        <div class="big-avatar">
             ${data.emoji}
+        </div>
+
+        <h2>
             ${data.name}
-        </h3>
+        </h2>
 
         <p>
             ${data.turma_area}
         </p>
 
-        <button onclick="goStep3()">
+        <div class="ok-msg">
+            ✔ Jogador encontrado
+        </div>
+
+        <button onclick="goStep3(); closeFoundModal();">
             Continuar →
         </button>
-    `;
+
+    </div>
+`;
+
+modal.classList.remove("hidden");
+}
+
+function closeFoundModal() {
+
+    document
+        .getElementById("playerFoundModal")
+        .classList
+        .add("hidden");
 }
 
 /* =========================
@@ -780,4 +816,75 @@ function backToStep2() {
         "stepText"
     ).innerText =
         "2. Digite o código do jogador que receberá a figurinha";
+}
+async function openQrScanner() {
+
+    document
+        .getElementById("qrModal")
+        .classList
+        .remove("hidden");
+
+    qrScanner =
+        new Html5Qrcode("reader");
+
+    try {
+
+        await qrScanner.start(
+
+            {
+                facingMode:
+                    "environment"
+            },
+
+            {
+                fps: 10,
+                qrbox: 250
+            },
+
+            async (decodedText) => {
+
+                document
+                    .getElementById(
+                        "friendCode"
+                    )
+                    .value =
+                    decodedText;
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
+                await qrScanner.stop();
+
+                closeQrModal();
+
+                await searchFriend();
+            }
+        );
+
+    } catch (error) {
+
+        console.log(
+            "Scanner cancelado"
+        );
+
+        closeQrModal();
+    }
+}
+async function closeQrModal() {
+
+    if (qrScanner) {
+
+        try {
+
+            await qrScanner.stop();
+
+        } catch { }
+
+        qrScanner = null;
+    }
+
+    document
+        .getElementById("qrModal")
+        .classList
+        .add("hidden");
 }

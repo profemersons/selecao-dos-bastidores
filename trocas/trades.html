@@ -68,6 +68,9 @@
                 </p>
 
                 <input id="friendCode" placeholder="Ex: ABC123">
+                <button id="scanQrBtn">
+                    📷 Escanear QR
+                </button>
 
                 <button onclick="searchFriend()">
 
@@ -161,10 +164,32 @@
         </button>
 
     </nav>
+    <div id="qrModal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <h2>
+            📷 Escaneie o QR do jogador
+        </h2>
+
+        <div id="reader"></div>
+
+        <button onclick="closeQrModal()">
+            Fechar
+        </button>
+
+    </div>
+
+</div>
+<div id="playerFoundModal" class="modal hidden">
+    <div class="modal-content" id="playerFoundContent">
+    </div>
+</div>
 
     <script src="../config.js"></script>
     <script src="../menu/menu.js"></script>
     <script src="../shared/stats.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="trades.js"></script>
 
 </body>
