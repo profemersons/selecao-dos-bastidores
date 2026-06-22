@@ -1,5 +1,3 @@
-// ⚠️ REMOVER ANTES DA COPA
-const DEV_MODE = true;
 
 
 const player =
@@ -27,46 +25,27 @@ async function init() {
     document.getElementById(
         "app"
     ).style.display = "block";
+    loadMissionPacks();
 }
 
 async function loadTodayStatus() {
 
-    const today =
-        new Date()
-            .toISOString()
-            .split("T")[0];
+    const startOfDay = getGameDayStart();
 
-    const { data } =
-        await client
-            .from("pack_openings")
-            .select("*")
-            .eq(
-                "player_id",
-                player.id
-            );
+    const { data } = await client
+        .from("pack_openings")
+        .select("*")
+        .eq("player_id", player.id)
+        .gte("created_at", startOfDay.toISOString());
 
-    const todayOpenings =
-        (data || []).filter(
-            p =>
-                p.created_at &&
-                p.created_at.startsWith(today)
-        );
-    //APAGAR DEPOIS TESTE
-    packsRemaining = DEV_MODE
-        ? 9999
-        : 3 - todayOpenings.length;
-    //APAGAR DEPOIS TESTE
-    /*
-        packsRemaining =
-            3 - todayOpenings.length;
-    
-        if (packsRemaining < 0) {
-            packsRemaining = 0;
-        }
-    */
+    const todayOpenings = data || [];
+
+    const MAX_PACKS = 3;
+
+    packsRemaining = Math.max(0, MAX_PACKS - todayOpenings.length);
+
     updateUI();
 }
-
 function updateUI() {
 
     document.getElementById(
@@ -113,95 +92,104 @@ async function openPack() {
 
     const now = new Date();
 
-    const hour =
-        now.getHours();
-
-    if (hour < 7) {
-
-        alert(
-            "Os pacotes só podem ser abertos após as 7h da manhã."
-        );
-
+    // =========================
+    // 1. BLOQUEIO HORÁRIO 07:00
+    // =========================
+    if (now.getHours() < 7) {
+        alert("Os pacotes só podem ser abertos após as 7h da manhã.");
         return;
     }
 
-    if (
-        packsRemaining <= 0
-    ) {
+    // =========================
+    // 2. VALIDAÇÃO REAL (BANCO)
+    // =========================
+    const startOfDay = getGameDayStart();
 
-        alert(
-            "Você já abriu todos os pacotes de hoje."
-        );
+    const { data: openings, error } = await client
+        .from("pack_openings")
+        .select("id")
+        .eq("player_id", player.id)
+        .gte("created_at", startOfDay.toISOString());
 
+    if (error) {
+        console.error(error);
+        alert("Erro ao validar pacotes do dia.");
         return;
     }
 
-    const { data: commons } =
-        await client
-            .from("stickers")
-            .select("*")
-            .eq(
-                "type",
-                "common"
-            );
+    const todayCount = openings?.length || 0;
 
+    const MAX_PACKS = 3;
+
+    if (todayCount >= MAX_PACKS) {
+        alert("Você já abriu todos os 3 pacotes de hoje.");
+        return;
+    }
+
+    // =========================
+    // 3. BUSCAR FIGURINHAS
+    // =========================
+    const { data: commons, error: stickersError } = await client
+        .from("stickers")
+        .select("*")
+        .eq("type", "common");
+
+    if (stickersError || !commons || commons.length === 0) {
+        alert("Erro ao carregar figurinhas.");
+        return;
+    }
+
+    // =========================
+    // 4. GERAR PACOTE (4 FIGURINHAS)
+    // =========================
     const rewards = [];
 
-    for (
-        let i = 0;
-        i < 4;
-        i++
-    ) {
+    for (let i = 0; i < 4; i++) {
 
         const sticker =
-            commons[
-            Math.floor(
-                Math.random() *
-                commons.length
-            )
-            ];
+            commons[Math.floor(Math.random() * commons.length)];
 
-        const isShiny =
-            Math.random() < 0.10; // TESTE
+        const isShiny = Math.random() < 0.10;
 
         rewards.push({
             ...sticker,
             is_shiny: isShiny
         });
 
-        await addToInventory(
-            sticker.id,
-            isShiny
-        );
-
-
+        await addToInventory(sticker.id, isShiny);
     }
 
-    await client
+    // =========================
+    // 5. REGISTRAR ABERTURA
+    // =========================
+    const { error: insertError } = await client
         .from("pack_openings")
-        .insert([
-            {
-                player_id:
-                    player.id,
-                pack_size: 4
-            }
-        ]);
+        .insert([{
+            player_id: player.id,
+            pack_size: 4,
+            opened_at: new Date().toISOString()
+        }]);
 
-    /* =========================
-    ATUALIZA STATS
-    ========================= */
+    if (insertError) {
+        console.error(insertError);
+        alert("Erro ao registrar abertura do pacote.");
+        return;
+    }
 
-    await recalculatePlayerStats(
-        player.id
-    );
+    // =========================
+    // 6. STATS
+    // =========================
+    await recalculatePlayerStats(player.id);
 
-    packsRemaining--;
+    // =========================
+    // 7. ATUALIZA UI VIA BANCO (NUNCA LOCAL)
+    // =========================
+    await loadTodayStatus();
 
-    updateUI();
-
-    showRewards(
-        rewards
-    );
+    // =========================
+    // 8. MOSTRA RECOMPENSAS
+    // =========================
+    showRewards(rewards);
 }
 
 async function addToInventory(
@@ -444,3 +432,40 @@ document
             .getElementById("resultContainer")
             .innerHTML = "";
     };
+function getGameDayStart() {
+
+    const now = new Date();
+
+    const today7 = new Date();
+    today7.setHours(7, 0, 0, 0);
+
+    // se ainda não passou das 7h → usa ontem 7h
+    if (now < today7) {
+        today7.setDate(today7.getDate() - 1);
+    }
+
+    return today7;
+}
+async function loadMissionPacks() {
+
+    const container = document.getElementById("missionPacks");
+    container.innerHTML = "";
+
+    // por enquanto mock (depois vem do banco mission_completions)
+    const availableMissionPack = false;
+
+    if (!availableMissionPack) return;
+
+    const pack = document.createElement("div");
+    pack.className = "pack mission";
+
+    pack.innerHTML = `
+        <div class="pack-emoji">🏆</div>
+        <div class="pack-title">Missão Concluída</div>
+        <div class="pack-info">Pacote extra liberado</div>
+    `;
+
+    pack.onclick = () => openPack("mission");
+
+    container.appendChild(pack);
+}

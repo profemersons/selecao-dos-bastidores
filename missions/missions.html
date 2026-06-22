@@ -3,66 +3,107 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operação Copa - Missões</title>
 
     <link rel="stylesheet" href="missions.css">
     <link rel="stylesheet" href="../menu/menu.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-    <!-- LOADING -->
-    <div id="loading">
-        Carregando missões...
-    </div>
+    <header class="header">
+        <h1>🎯 Missões da Semana</h1>
+        <p>Complete desafios e desbloqueie recompensas</p>
+    </header>
 
-    <!-- APP -->
-    <div id="app" style="display:none">
+    <main id="missionsContainer">
 
-        <header class="header">
-            <h1>🎯 Missões</h1>
-            <p>Complete desafios e ganhe recompensas</p>
-        </header>
+        <!-- SEGUNDA (HOJE) -->
+        <div class="mission-day">
+            <h2>Segunda-feira</h2>
 
-        <main id="missionsContainer"></main>
+            <div class="mission-card">
+                <h3>Missão de Coleta</h3>
+                <p>Complete o desafio e desbloqueie sua recompensa</p>
 
-    </div>
+                <!-- 🔥 LINK DA MISSÃO -->
+                <button onclick="location.href='../minigames/coleta.html'">
+                    Jogar missão
+                </button>
+            </div>
+        </div>
 
+        <!-- TERÇA -->
+        <div class="mission-day">
+            <h2>Terça-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão 1</h3>
+                <p>Desafio disponível na terça</p>
+                <button disabled>Bloqueado 🔒</button>
+            </div>
+        </div>
+
+        <!-- QUARTA -->
+        <div class="mission-day">
+            <h2>Quarta-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão 1</h3>
+                <p>Desafio disponível na quarta</p>
+
+                <!-- 👇 AQUI VOCÊ SÓ TROCA O LINK DEPOIS -->
+                <button onclick="location.href='SEU_LINK_AQUI.html'">
+                    Jogar missão
+                </button>
+            </div>
+        </div>
+
+        <!-- QUINTA -->
+        <div class="mission-day">
+            <h2>Quinta-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão 1</h3>
+                <p>Desafio disponível na quinta</p>
+                <button disabled>Bloqueado 🔒</button>
+            </div>
+        </div>
+
+        <!-- SEXTA -->
+        <div class="mission-day">
+            <h2>Sexta-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão Final</h3>
+                <p>Desafio especial da semana</p>
+                <button disabled>Bloqueado 🔒</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MENU -->
     <nav class="menu-bar">
 
-        <button onclick="goAlbum()">
-            <span>📖</span>
-            <small>Álbum</small>
+        <button onclick="location.href='../album/album.html'">
+            📖<br><small>Álbum</small>
         </button>
 
-        <button onclick="goPacks()">
-            <span>📦</span>
-            <small>Pacotes</small>
+        <button onclick="location.href='../pacotes/pacotes.html'">
+            📦<br><small>Pacotes</small>
         </button>
 
-        <button onclick="goMissions()">
-            <span>🎯</span>
-            <small>Missões</small>
+        <button onclick="location.href='missions.html'">
+            🎯<br><small>Missões</small>
         </button>
 
-        <button class="center-btn" onclick="goTrades()">
-            <span>🔁</span>
-            <small>Trocas</small>
-        </button>
-
-        <button onclick="goProfile()">
-            <span>👤</span>
-            <small>Perfil</small>
+        <button onclick="location.href='../perfil/perfil.html'">
+            👤<br><small>Perfil</small>
         </button>
 
     </nav>
-    <script src="../menu/menu.js"></script>
-    <script src="../config.js"></script>
-    <script src="../shared/stats.js"></script>
-    <script src="missions.js"></script>
 
 </body>
 

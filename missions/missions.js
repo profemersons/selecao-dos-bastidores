@@ -1,8 +1,28 @@
-const player = JSON.parse(localStorage.getItem("player"));
+const player =
+    JSON.parse(localStorage.getItem("player"));
 
 if (!player) {
     window.location.href = "../index.html";
 }
+if (!player) {
+    window.location.href = "../index.html";
+}
+
+const daysOrder = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday"
+];
+
+const dayLabel = {
+    monday: "Segunda-feira",
+    tuesday: "Terça-feira",
+    wednesday: "Quarta-feira",
+    thursday: "Quinta-feira",
+    friday: "Sexta-feira"
+};
 
 init();
 
@@ -12,145 +32,80 @@ async function init() {
     document.getElementById("loading").style.display = "none";
     document.getElementById("app").style.display = "block";
 }
+function getGameDayStart() {
+    const now = new Date();
+    const today7 = new Date();
+    today7.setHours(7, 0, 0, 0);
 
+    if (now < today7) {
+        today7.setDate(today7.getDate() - 1);
+    }
+
+    return today7;
+}
+
+function getCurrentWeekDay() {
+    const day = new Date().getDay();
+
+    return [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday"
+    ][day];
+}
 async function loadMissions() {
 
     const container = document.getElementById("missionsContainer");
-    container.innerHTML = "Carregando...";
-
-    const { data: missions, error } = await client
-        .from("missions")
-        .select("*")
-        .order("id");
-
-    if (error) {
-        container.innerHTML = "Erro ao carregar missões";
-        console.error(error);
-        return;
-    }
-
-    if (!missions || missions.length === 0) {
-        container.innerHTML = "Nenhuma missão disponível";
-        return;
-    }
-
     container.innerHTML = "";
 
-    for (const mission of missions) {
+    const now = new Date();
+    const currentDay = getCurrentWeekDay();
+    const isAfter7 = now.getHours() >= 7;
 
-        const { data: done } = await client
-            .from("mission_completions")
-            .select("*")
-            .eq("player_id", player.id)
-            .eq("mission_id", mission.id)
-            .maybeSingle();
+    const { data: missions } = await client
+        .from("missions")
+        .select("*");
 
-        const completed = !!done;
+    if (!missions) return;
 
-        const div = document.createElement("div");
-        div.className = "mission";
+    daysOrder.forEach(day => {
 
-        div.innerHTML = `
-            <h3>${mission.title}</h3>
+        const dayMissions = missions.filter(m => m.day === day);
 
-            <p>
-                Recompensa: figurinha #${mission.reward_value}
-            </p>
+        const isToday = day === currentDay;
+        const isLocked = !(isToday && isAfter7);
 
-            <button ${completed ? "disabled" : ""}>
-                ${completed ? "Concluída ✔" : "Concluir"}
-            </button>
-        `;
+        dayMissions.forEach(mission => {
 
-        if (!completed) {
-            div.querySelector("button").onclick = () => {
-                completeMission(mission);
-            };
-        }
+            const card = document.createElement("div");
+            card.className = "mission-card";
 
-        container.appendChild(div);
-    }
-}
+            if (!isToday) card.classList.add("old");
+            if (isToday) card.classList.add("today");
+            if (isLocked) card.classList.add("locked");
 
-async function completeMission(mission) {
+            card.innerHTML = `
+                <h3>${mission.title}</h3>
 
-    // 1. evita duplicação
-    const { data: already } = await client
-        .from("mission_completions")
-        .select("*")
-        .eq("player_id", player.id)
-        .eq("mission_id", mission.id)
-        .maybeSingle();
+                <p>🎁 Jogar missão para desbloquear recompensa</p>
 
-    if (already) {
-        alert("Você já concluiu essa missão.");
-        return;
-    }
+                <button ${isLocked ? "disabled" : ""}>
+                    ${isLocked ? "Bloqueado 🔒" : "Jogar missão"}
+                </button>
+            `;
 
-    // 2. salva conclusão
-    const { error } = await client
-        .from("mission_completions")
-        .insert([{
-            player_id: player.id,
-            mission_id: mission.id,
-            reward_claimed: true
-        }]);
+            if (!isLocked) {
+                card.querySelector("button").onclick = () => {
+                    window.location.href =
+                        "../minigame/minigame.html?mission=" + mission.id;
+                };
+            }
 
-    if (error) {
-        console.error(error);
-        alert("Erro ao concluir missão.");
-        return;
-    }
-
-    // 3. dá recompensa
-    await giveSticker(mission.reward_value);
-
-    alert("Missão concluída! 🎉");
-
-    // 4. recarrega UI
-    await loadMissions();
-}
-
-async function giveSticker(stickerId) {
-
-    const { data: existing } = await client
-        .from("inventory")
-        .select("*")
-        .eq("player_id", player.id)
-        .eq("sticker_id", stickerId)
-        .maybeSingle();
-
-    if (existing) {
-
-        await client
-            .from("inventory")
-            .update({
-                quantity: existing.quantity + 1
-            })
-            .eq("id", existing.id);
-
-    } else {
-
-        await client
-            .from("inventory")
-            .insert([{
-                player_id: player.id,
-                sticker_id: stickerId,
-                quantity: 1
-            }]);
-    }
-}
-
-/* NAV */
-
-function goAlbum() {
-    window.location.href = "../album/album.html";
-}
-
-function goPacks() {
-    window.location.href = "../pacotes/pacotes.html";
-}
-
-function goProfile() {
-    window.location.href = "../perfil/perfil.html";
+            container.appendChild(card);
+        });
+    });
 }
