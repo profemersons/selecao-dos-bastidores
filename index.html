@@ -21,7 +21,7 @@
         <!-- BOAS VINDAS -->
         <section id="screen-welcome" class="screen active">
 
-            
+
             <h1>Seleção dos Bastidores</h1>
 
             <p id="slogan">
@@ -36,6 +36,10 @@
 
             <button onclick="verifyCode()">
                 Entrar no jogo
+            </button>
+
+            <button class="how-btn" onclick="openHowItWorks()">
+                📘 Como funciona
             </button>
 
             <p id="codeError" class="error"></p>
@@ -114,8 +118,21 @@
     <div id="loading" class="loading hidden">
         Carregando...
     </div>
+   
+<!-- MODAL INSTRUÇÕES -->
+<div id="howModal" class="modal hidden">
+    <div class="modal-content how-content">
 
+        <h2>📖 Como Jogar — Seleção dos Bastidores</h2>
 
+        <div id="howText"></div>
+
+        <button onclick="closeHowItWorks()">
+            Entendi
+        </button>
+
+    </div>
+</div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="app.js"></script>

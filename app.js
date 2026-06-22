@@ -467,3 +467,108 @@ window.login =
 
 window.loadAreas =
   loadAreas;
+
+const howTextContent = `
+📖 Como Jogar — Seleção dos Bastidores
+
+A Seleção dos Bastidores é um jogo onde você descobre profissões reais por trás de grandes eventos como a Copa do Mundo.
+
+Cada figurinha representa uma profissão que ajuda a construir não só o evento no país sede, mas também tudo o que acontece ao redor dele, como transmissões, comemorações, viagens e experiências do público.
+
+---
+
+🎯 Objetivo
+
+Descobrir, colecionar e completar o máximo de profissões diferentes.
+
+---
+
+📦 Como funciona o jogo
+
+Todos os dias você recebe:
+
+3 pacotes de figurinhas
+Cada pacote contém 4 figurinhas aleatórias
+
+As figurinhas representam profissionais de diversas áreas.
+
+---
+
+⭐ Tipos de figurinhas
+
+⭐ Brilhante
+Rara, aparece com aproximadamente 10% de chance
+Vale mais pontos
+
+📖 Única
+Primeira vez que você encontra aquela figurinha
+
+🔁 Repetida
+Já encontrada antes, mas ainda útil para trocas
+
+---
+
+🏆 Rankings
+
+Você pode competir de várias formas:
+
+👕 Camisa 10
+Maior pontuação total
+
+📚 Artilheiros das Figurinhas
+Maior quantidade total de figurinhas coletadas
+
+⭐ Caçadores de Estrelas
+Maior quantidade de figurinhas brilhantes
+
+👥 Amigos da Torcida
+Maior número de amigos no jogo
+
+🔄 Mestres das Substituições
+Maior número de trocas realizadas
+
+---
+
+🏫 Competição de grupos
+
+🏫 Taça das Turmas
+Vence quem tiver maior completude de álbum (mais figurinhas diferentes descobertas)
+
+👔 Taça dos Funcionários
+Vence a área com maior completude de álbum
+
+---
+
+🔄 Trocas e interação
+
+Você pode trocar figurinhas com outros jogadores usando código ou QR Code.
+
+---
+
+🎯 Missões
+
+Missões diárias liberam recompensas extras.
+
+---
+
+🌍 Mensagem do jogo
+
+A Seleção dos Bastidores mostra que grandes eventos são feitos por muitas profissões diferentes.
+
+Cada figurinha é uma peça desse sistema.
+
+---
+
+❓ Será que a profissão que você procura está escondida em algum pacote?
+
+
+`;
+
+function openHowItWorks() {
+    document.getElementById("howModal").classList.remove("hidden");
+    document.getElementById("howText").innerText = howTextContent;
+}
+
+function closeHowItWorks() {
+    document.getElementById("howModal").classList.add("hidden");
+}
