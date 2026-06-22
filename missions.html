@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operação Copa - Missões</title>
+
+    <link rel="stylesheet" href="missions.css">
+    <link rel="stylesheet" href="../menu/menu.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <h1>🎯 Missões da Semana</h1>
+        <p>Complete desafios e desbloqueie recompensas</p>
+    </header>
+
+    <main id="missionsContainer">
+
+        <!-- SEGUNDA (HOJE) -->
+        <div class="mission-day">
+            <h2>Segunda-feira</h2>
+
+            <div class="mission-card">
+                <h3>Missão de Coleta</h3>
+                <p>Complete o desafio e desbloqueie sua recompensa</p>
+
+                <!-- 🔥 LINK DA MISSÃO -->
+                <button onclick="location.href='../minigames/coleta.html'">
+                    Jogar missão
+                </button>
+            </div>
+        </div>
+
+        <!-- TERÇA -->
+        <div class="mission-day">
+            <h2>Terça-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão 1</h3>
+                <p>Desafio disponível na terça</p>
+                <button disabled>Bloqueado 🔒</button>
+            </div>
+        </div>
+
+        <!-- QUARTA -->
+        <div class="mission-day">
+            <h2>Quarta-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão 1</h3>
+                <p>Desafio disponível na quarta</p>
+
+                <!-- 👇 AQUI VOCÊ SÓ TROCA O LINK DEPOIS -->
+                <button onclick="location.href='SEU_LINK_AQUI.html'">
+                    Jogar missão
+                </button>
+            </div>
+        </div>
+
+        <!-- QUINTA -->
+        <div class="mission-day">
+            <h2>Quinta-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão 1</h3>
+                <p>Desafio disponível na quinta</p>
+                <button disabled>Bloqueado 🔒</button>
+            </div>
+        </div>
+
+        <!-- SEXTA -->
+        <div class="mission-day">
+            <h2>Sexta-feira</h2>
+
+            <div class="mission-card locked">
+                <h3>Missão Final</h3>
+                <p>Desafio especial da semana</p>
+                <button disabled>Bloqueado 🔒</button>
+            </div>
+        </div>
+
+    </main>
+
+  <nav class="menu-bar">
+
+        <button onclick="goAlbum()">
+            <span>📖</span>
+            <small>Álbum</small>
+        </button>
+
+        <button onclick="goPacks()">
+            <span>📦</span>
+            <small>Pacotes</small>
+        </button>
+
+        <button onclick="goMissions()">
+            <span>🎯</span>
+            <small>Missões</small>
+        </button>
+
+        <button class="center-btn" onclick="goTrades()">
+            <span>🔁</span>
+            <small>Trocas</small>
+        </button>
+
+        <button onclick="goProfile()">
+            <span>👤</span>
+            <small>Perfil</small>
+        </button>
+
+    </nav>
+
+</body>
+
+</html>
