@@ -219,18 +219,19 @@ async function register() {
       .select()
       .single();
 
-  if (error) {
+if (error) {
 
-    hideLoading();
+  hideLoading();
 
-    console.log(error);
+  console.error("ERRO SUPABASE:");
+  console.error(error);
 
-    alert(
-      "Erro ao criar conta."
-    );
+  alert(
+    JSON.stringify(error)
+  );
 
-    return;
-  }
+  return;
+}
 
   await client
     .from("player_codes")

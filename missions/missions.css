@@ -71,14 +71,61 @@ body {
 }
 
 /* MENU FIXO */
-.menu-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(5,8,22,0.95);
-    display: flex;
-    justify-content: space-around;
-    padding: 10px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+
+/* =========================
+MENU
+========================= */
+
+.bottom-nav{
+
+    position:fixed;
+
+    bottom:0;
+    left:0;
+    right:0;
+
+    background:
+    rgba(5,8,22,.95);
+
+    backdrop-filter:blur(10px);
+
+    border-top:
+    1px solid rgba(255,255,255,.08);
+
+    display:flex;
+
+    justify-content:space-around;
+
+    padding:12px;
+
+    z-index:999;
+}
+
+.bottom-nav button{
+
+    width:auto;
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-size:24px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.bottom-nav button:hover{
+
+    transform:
+    scale(1.1);
+}
+
+.bottom-nav .active{
+
+    transform:
+    scale(1.15);
 }
