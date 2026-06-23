@@ -470,8 +470,6 @@ window.loadAreas =
   loadAreas;
 
 const howTextContent = `
-📖 Como Jogar — Seleção dos Bastidores
-
 A Seleção dos Bastidores é um jogo onde você descobre profissões reais por trás de grandes eventos como a Copa do Mundo.
 
 Cada figurinha representa uma profissão que ajuda a construir não só o evento no país sede, mas também tudo o que acontece ao redor dele, como transmissões, comemorações, viagens e experiências do público.
@@ -561,6 +559,14 @@ Cada figurinha é uma peça desse sistema.
 ---
 
 ❓ Será que a profissão que você procura está escondida em algum pacote?
+
+---
+
+Um projeto EMED Senac Aclimação
+
+Desenvolvido por Emerson Brito e Camila Catalado 🧑‍🏫
+Ilustrado por MULTI4 e MULTI5 🎨
+
 
 
 `;

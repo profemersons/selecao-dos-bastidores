@@ -260,6 +260,7 @@
                     tudo em 3 turnos frenéticos de 15s.</p>
                 <p><strong>Atenção:</strong> Toque APENAS nos tipos em evidência. Erros tiram pontos e o lixo vai cair
                     cada vez mais rápido!</p>
+                    <p><strong>Meta mínima:</strong> <span id="min-score-text">200</span> pontos</p>
                 <button onclick="startRound()">Iniciar Turno 1</button>
             </div>
         </div>
@@ -284,163 +285,153 @@
             </div>
         </div>
     </div>
+ 
 
-    <script>
-        /* =========================
-           CONFIG
-        ========================= */
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<script src="../menu/menu.js"></script>
 
-        const MIN_SCORE = 120;
+<script>
 
-        const player = JSON.parse(localStorage.getItem("player"));
+    
+const MIN_SCORE = 200;
+document.getElementById("min-score-text").innerText = MIN_SCORE;
 
-        if (!player) {
-            window.location.href = "../index.html";
-        }
+const player = JSON.parse(localStorage.getItem("player"));
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const missionSlug = urlParams.get("mission") || "coleta";
+if (!player) {
+    window.location.href = "../index.html";
+}
 
-        /* =========================
-           ELEMENTOS
-        ========================= */
+const urlParams = new URLSearchParams(window.location.search);
+const missionSlug = urlParams.get("mission") || "coleta";
 
-        const gameSpace = document.getElementById('game-space');
-        const scoreTxt = document.getElementById('score-txt');
-        const roundTxt = document.getElementById('round-txt');
-        const timeTxt = document.getElementById('time-txt');
+/* =========================
+   ELEMENTOS
+========================= */
 
-        const targetTypeName = document.getElementById('target-type-name');
-        const targetEmojisDiv = document.getElementById('target-emojis');
-        const targetBanner = document.getElementById('target-banner');
+const gameSpace = document.getElementById('game-space');
+const scoreTxt = document.getElementById('score-txt');
+const roundTxt = document.getElementById('round-txt');
+const timeTxt = document.getElementById('time-txt');
 
-        const modalStart = document.getElementById('modal-start');
-        const modalRest = document.getElementById('modal-rest');
-        const modalEnd = document.getElementById('modal-end');
+const targetTypeName = document.getElementById('target-type-name');
+const targetEmojisDiv = document.getElementById('target-emojis');
+const targetBanner = document.getElementById('target-banner');
 
-        const restTimerTxt = document.getElementById('rest-timer');
-        const rewardCodeTxt = document.getElementById('reward-code');
+const modalStart = document.getElementById('modal-start');
+const modalRest = document.getElementById('modal-rest');
+const modalEnd = document.getElementById('modal-end');
 
-        /* =========================
-           ESTADO
-        ========================= */
+const restTimerTxt = document.getElementById('rest-timer');
+const rewardCodeTxt = document.getElementById('reward-code');
 
-        let score = 0;
-        let currentRound = 0;
-        let roundTimeLeft = 15;
-        let gameActive = false;
+/* =========================
+   ESTADO
+========================= */
 
-        let loopFisica;
-        let loopCronometro;
-        let timeoutSpawn;
+let score = 0;
+let currentRound = 0;
+let roundTimeLeft = 15;
+let gameActive = false;
 
-        let dbCategoriasTurno = [];
-        let categoriaAlvo = null;
+let loopFisica;
+let loopCronometro;
+let timeoutSpawn;
 
-        let spawnSpeed = 600;
-        let fallSpeed = 3.5;
+let dbCategoriasTurno = [];
+let categoriaAlvo = null;
 
-        /* =========================
-           CATEGORIAS
-        ========================= */
+let spawnSpeed = 600;
+let fallSpeed = 3.5;
 
-        const categorias = [
-            { nome: 'PAPEL', emojis: ['📄', '🧻', '📦', '📰'], cor: 'rgba(37, 99, 235, 0.2)', borda: 'rgba(37, 99, 235, 0.5)' },
-            { nome: 'PLÁSTICO', emojis: ['🥤', '🍼', '🛍️', '🪣'], cor: 'rgba(239, 68, 68, 0.2)', borda: 'rgba(239, 68, 68, 0.5)' },
-            { nome: 'METAL', emojis: ['🥫', '⚱️', '🍴', '🧲'], cor: 'rgba(250, 204, 21, 0.2)', borda: 'rgba(250, 204, 21, 0.5)' },
-            { nome: 'ORGANICO', emojis: ['🍏', '🍌', '🍉', '🦴'], cor: 'rgba(139, 92, 26, 0.2)', borda: 'rgba(139, 92, 26, 0.5)' },
-            { nome: 'ELETRONICO', emojis: ['💻', '📱', '🔋', '🔌'], cor: 'rgba(148, 163, 184, 0.2)', borda: 'rgba(148, 163, 184, 0.5)' }
-        ];
+/* =========================
+   CATEGORIAS
+========================= */
 
-        /* =========================
-           INICIO
-        ========================= */
+const categorias = [
+    { nome: 'PAPEL', emojis: ['📄', '🧻', '📦', '📰'], cor: 'rgba(37, 99, 235, 0.2)', borda: 'rgba(37, 99, 235, 0.5)' },
+    { nome: 'PLÁSTICO', emojis: ['🥤', '🍼', '🛍️', '🪣'], cor: 'rgba(239, 68, 68, 0.2)', borda: 'rgba(239, 68, 68, 0.5)' },
+    { nome: 'METAL', emojis: ['🥫', '⚱️', '🍴', '🧲'], cor: 'rgba(250, 204, 21, 0.2)', borda: 'rgba(250, 204, 21, 0.5)' },
+    { nome: 'ORGANICO', emojis: ['🍏', '🍌', '🍉', '🦴'], cor: 'rgba(139, 92, 26, 0.2)', borda: 'rgba(139, 92, 26, 0.5)' },
+    { nome: 'ELETRONICO', emojis: ['💻', '📱', '🔋', '🔌'], cor: 'rgba(148, 163, 184, 0.2)', borda: 'rgba(148, 163, 184, 0.5)' }
+];
 
-        init();
+/* =========================
+   INICIO
+========================= */
 
-        function init() {
-            modalStart.classList.remove('hidden');
-        }
+init();
 
-        /* =========================
-           ROUNDS
-        ========================= */
+function init() {
+    modalStart.classList.remove('hidden');
+}
 
-        function startRound() {
+/* =========================
+   GAME LOOP
+========================= */
 
-            currentRound++;
-            gameActive = true;
+function startRound() {
+    currentRound++;
+    gameActive = true;
 
-            modalStart.classList.add('hidden');
-            modalRest.classList.add('hidden');
-            modalEnd.classList.add('hidden');
+    modalStart.classList.add('hidden');
+    modalRest.classList.add('hidden');
+    modalEnd.classList.add('hidden');
 
-            roundTimeLeft = 15;
+    roundTimeLeft = 15;
 
-            roundTxt.innerText = `${currentRound}/3`;
-            timeTxt.innerText = `${roundTimeLeft}s`;
+    roundTxt.innerText = `${currentRound}/3`;
+    timeTxt.innerText = `${roundTimeLeft}s`;
 
-            if (currentRound === 1) {
-                spawnSpeed = 500;
-                fallSpeed = 4;
-            } else if (currentRound === 2) {
-                spawnSpeed = 300;
-                fallSpeed = 6;
-            } else {
-                spawnSpeed = 150;
-                fallSpeed = 8.5;
-            }
+    spawnSpeed = currentRound === 1 ? 500 : currentRound === 2 ? 300 : 150;
+    fallSpeed = currentRound === 1 ? 4 : currentRound === 2 ? 6 : 8.5;
 
-            const shuffled = [...categorias].sort(() => 0.5 - Math.random());
-            dbCategoriasTurno = shuffled.slice(0, 3);
+    const shuffled = [...categorias].sort(() => 0.5 - Math.random());
+    dbCategoriasTurno = shuffled.slice(0, 3);
 
-            categoriaAlvo = dbCategoriasTurno[Math.floor(Math.random() * dbCategoriasTurno.length)];
+    categoriaAlvo = dbCategoriasTurno[Math.floor(Math.random() * dbCategoriasTurno.length)];
 
-            targetTypeName.innerText = categoriaAlvo.nome;
-            targetEmojisDiv.innerText = categoriaAlvo.emojis.join('');
-            targetBanner.style.background = categoriaAlvo.cor;
-            targetBanner.style.borderColor = categoriaAlvo.borda;
+    targetTypeName.innerText = categoriaAlvo.nome;
+    targetEmojisDiv.innerText = categoriaAlvo.emojis.join('');
+    targetBanner.style.background = categoriaAlvo.cor;
+    targetBanner.style.borderColor = categoriaAlvo.borda;
 
-            loopFisica = setInterval(updatePhysics, 1000 / 60);
-            loopCronometro = setInterval(updateTimer, 1000);
+    loopFisica = setInterval(updatePhysics, 1000 / 60);
+    loopCronometro = setInterval(updateTimer, 1000);
 
-            spawnManager();
-        }
+    spawnManager();
+}
 
-        /* =========================
-           SPAWN
-        ========================= */
+/* =========================
+   SPAWN / CLICK
+========================= */
 
-        function spawnManager() {
-            if (!gameActive) return;
+function spawnManager() {
+    if (!gameActive) return;
 
-            const cat = dbCategoriasTurno[Math.floor(Math.random() * dbCategoriasTurno.length)];
-            const emoji = cat.emojis[Math.floor(Math.random() * cat.emojis.length)];
+    const cat = dbCategoriasTurno[Math.floor(Math.random() * dbCategoriasTurno.length)];
+    const emoji = cat.emojis[Math.floor(Math.random() * cat.emojis.length)];
 
-            const el = document.createElement('div');
-            el.className = 'falling-emoji';
-            el.innerText = emoji;
-            el.dataset.categoria = cat.nome;
+    const el = document.createElement('div');
+    el.className = 'falling-emoji';
+    el.innerText = emoji;
+    el.dataset.categoria = cat.nome;
 
-            const maxX = gameSpace.offsetWidth - 50;
-            el.style.left = `${Math.random() * maxX}px`;
-            el.style.top = `-50px`;
+    const maxX = gameSpace.offsetWidth - 50;
+    el.style.left = `${Math.random() * maxX}px`;
+    el.style.top = `-50px`;
 
-            el.addEventListener('click', () => clickItem(el));
-            el.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                clickItem(el);
-            });
+    el.addEventListener('click', () => clickItem(el));
+    el.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        clickItem(el);
+    });
 
-            gameSpace.appendChild(el);
+    gameSpace.appendChild(el);
 
-            const next = Math.max(100, spawnSpeed - ((15 - roundTimeLeft) * 15));
-            timeoutSpawn = setTimeout(spawnManager, next);
-        }
-
-        /* =========================
-           CLICK
-        ========================= */
+    timeoutSpawn = setTimeout(spawnManager, spawnSpeed);
+}
 
 function clickItem(el) {
     if (!gameActive) return;
@@ -457,121 +448,165 @@ function clickItem(el) {
     el.remove();
 }
 
-        /* =========================
-           FÍSICA
-        ========================= */
-        function updatePhysics() {
-            let itens = document.querySelectorAll('.falling-emoji');
-            let alturaLimite = gameSpace.offsetHeight;
+/* =========================
+   PHYSICS
+========================= */
 
-            itens.forEach(item => {
-                let topAtual = parseFloat(item.style.top);
+function updatePhysics() {
+    const itens = document.querySelectorAll('.falling-emoji');
+    const altura = gameSpace.offsetHeight;
 
-                item.style.top = `${topAtual + fallSpeed}px`;
+    itens.forEach(item => {
+        let top = parseFloat(item.style.top);
+        item.style.top = `${top + fallSpeed}px`;
 
-                if (topAtual > alturaLimite) {
-                    // ❌ NÃO tira mais pontos aqui
-                    item.remove();
-                }
-            });
+        if (top > altura) item.remove();
+    });
+}
+
+/* =========================
+   TIMER
+========================= */
+
+function updateTimer() {
+    roundTimeLeft--;
+    timeTxt.innerText = `${roundTimeLeft}s`;
+
+    if (roundTimeLeft <= 0) {
+        clearTurn();
+        currentRound < 3 ? showRest() : finishGame();
+    }
+}
+
+function clearTurn() {
+    gameActive = false;
+    clearInterval(loopFisica);
+    clearInterval(loopCronometro);
+    clearTimeout(timeoutSpawn);
+    gameSpace.innerHTML = '';
+}
+
+/* =========================
+   REST
+========================= */
+
+function showRest() {
+    let t = 5;
+    modalRest.classList.remove('hidden');
+    restTimerTxt.innerText = `Descanso: ${t}s`;
+
+    const interval = setInterval(() => {
+        t--;
+        restTimerTxt.innerText = `Descanso: ${t}s`;
+
+        if (t <= 0) {
+            clearInterval(interval);
+            startRound();
         }
+    }, 1000);
+}
 
-        /* =========================
-           TIMER
-        ========================= */
+/* =========================
+   FINAL + REWARD SYSTEM
+========================= */
 
-        function updateTimer() {
+async function finishGame() {
 
-            roundTimeLeft--;
-            timeTxt.innerText = `${roundTimeLeft}s`;
+    modalEnd.classList.remove('hidden');
 
-            if (roundTimeLeft <= 0) {
+    rewardCodeTxt.innerText = "VERIFICANDO...";
 
-                clearTurn();
+    // salva melhor score
+    const { data: existingScore } = await client
+        .from("mission_scores")
+        .select("*")
+        .eq("player_id", player.id)
+        .eq("mission_slug", missionSlug)
+        .maybeSingle();
 
-                if (currentRound < 3) {
-                    showRest();
-                } else {
-                    finishGame();
-                }
-            }
-        }
+    if (!existingScore) {
+        await client.from("mission_scores").insert([{
+            player_id: player.id,
+            mission_slug: missionSlug,
+            score: score
+        }]);
+    } else if (score > existingScore.score) {
+        await client
+            .from("mission_scores")
+            .update({ score })
+            .eq("id", existingScore.id);
+    }
 
-        function clearTurn() {
-            gameActive = false;
-            clearInterval(loopFisica);
-            clearInterval(loopCronometro);
-            clearTimeout(timeoutSpawn);
-            gameSpace.innerHTML = '';
-        }
+    // mostra score final
+    rewardCodeTxt.innerHTML = `
+        <div style="font-size:18px; margin-bottom:10px;">
+            Sua pontuação: <b>${score}</b>
+        </div>
+    `;
 
-        /* =========================
-           REST
-        ========================= */
+    // verifica reward existente
+    const { data: existingReward } = await client
+        .from("mission_rewards")
+        .select("*")
+        .eq("player_id", player.id)
+        .eq("mission_slug", missionSlug)
+        .maybeSingle();
 
-        function showRest() {
+    if (existingReward) {
+        rewardCodeTxt.innerHTML += `
+            <p>Você já resgatou essa missão.</p>
+            <button onclick="goPacks()">Ir para Pacotes</button>
+        `;
+        return;
+    }
 
-            let t = 5;
-            modalRest.classList.remove('hidden');
+    // valida score corretamente
+    if (score < MIN_SCORE) {
+        rewardCodeTxt.innerHTML += `
+            <p style="color:#ef4444;">
+                Pontuação mínima não atingida (${MIN_SCORE})
+            </p>
+            <button onclick="goToPacks()">Voltar</button>
+        `;
+        return;
+    }
 
-            restTimerTxt.innerText = `Descanso: ${t}s`;
+    // cria reward
+    const { error } = await client
+        .from("mission_rewards")
+        .insert([{
+            player_id: player.id,
+            mission_slug: missionSlug,
+            reward_type: "pack",
+            reward_value: 1,
+            unlocked: true,
+            claimed: false
+        }]);
 
-            const interval = setInterval(() => {
-                t--;
-                restTimerTxt.innerText = `Descanso: ${t}s`;
+    if (error) {
+        console.log(error);
+        rewardCodeTxt.innerText = "Erro ao gerar recompensa";
+        return;
+    }
 
-                if (t <= 0) {
-                    clearInterval(interval);
-                    startRound();
-                }
-            }, 1000);
-        }
+    rewardCodeTxt.innerHTML += `
+        <p style="color:#22c55e;">🎁 Pacote liberado!</p>
+        <button onclick="goToPacks()">Ir para Pacotes</button>
+    `;
+}
+/* =========================
+   RESTART
+========================= */
 
-        /* =========================
-           FINAL
-        ========================= */
+function restartGame() {
+    score = 0;
+    currentRound = 0;
+    scoreTxt.innerText = 0;
 
-        async function finishGame() {
-
-            modalEnd.classList.remove('hidden');
-
-            const finalCode = `ECO-${missionSlug}-${score}-${Math.floor(Math.random() * 999)}`;
-
-            rewardCodeTxt.innerText = finalCode;
-
-            /* 🔥 SALVA SCORE */
-            await client.from("mission_scores").insert([{
-                player_id: player.id,
-                mission_slug: missionSlug,
-                score: score
-            }]);
-
-            /* 🎁 RECOMPENSA */
-            if (score >= MIN_SCORE) {
-
-                await client.from("pack_rewards").insert([{
-                    player_id: player.id,
-                    code: finalCode,
-                    source: "minigame",
-                    mission_slug: missionSlug,
-                    created_at: new Date().toISOString()
-                }]);
-            }
-        }
-
-        /* =========================
-           RESTART
-        ========================= */
-
-        function restartGame() {
-            score = 0;
-            currentRound = 0;
-            scoreTxt.innerText = 0;
-
-            modalEnd.classList.add('hidden');
-            modalStart.classList.remove('hidden');
-        }
-    </script>
+    modalEnd.classList.add('hidden');
+    modalStart.classList.remove('hidden');
+}
+</script>
 </body>
 
 </html>

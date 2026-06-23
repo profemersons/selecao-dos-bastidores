@@ -451,21 +451,92 @@ async function loadMissionPacks() {
     const container = document.getElementById("missionPacks");
     container.innerHTML = "";
 
-    // por enquanto mock (depois vem do banco mission_completions)
-    const availableMissionPack = false;
+    // 1. buscar rewards liberadas mas não resgatadas
+    const { data: rewards, error } = await client
+        .from("mission_rewards")
+        .select("*")
+        .eq("player_id", player.id)
+        .eq("claimed", false);
 
-    if (!availableMissionPack) return;
+    if (error) {
+        console.error(error);
+        return;
+    }
 
-    const pack = document.createElement("div");
-    pack.className = "pack mission";
+    if (!rewards || rewards.length === 0) {
+        container.innerHTML = `
+            <p style="text-align:center;opacity:.7;">
+                Nenhum pacote de missão disponível
+            </p>`;
+        return;
+    }
 
-    pack.innerHTML = `
-        <div class="pack-emoji">🏆</div>
-        <div class="pack-title">Missão Concluída</div>
-        <div class="pack-info">Pacote extra liberado</div>
-    `;
+    // 2. render igual pacotes diários
+    rewards.forEach(r => {
 
-    pack.onclick = () => openPack("mission");
+        const pack = document.createElement("div");
+        pack.className = "pack mission";
 
-    container.appendChild(pack);
+        pack.innerHTML = `
+            <div class="pack-emoji">🎯</div>
+            <div class="pack-title">Missão Liberada</div>
+            <div class="pack-info">
+                Clique para resgatar
+            </div>
+        `;
+
+        pack.onclick = () => openMissionPack(r);
+
+        container.appendChild(pack);
+    });
+}
+async function openMissionPack(reward) {
+
+    // 🔒 trava imediata (evita clique duplo)
+    const card = event?.currentTarget;
+    if (card) {
+        card.style.pointerEvents = "none";
+        card.style.opacity = "0.5";
+    }
+
+    // 1. gerar pacote
+    const { data: commons } = await client
+        .from("stickers")
+        .select("*")
+        .eq("type", "common");
+
+    const rewards = [];
+
+    for (let i = 0; i < 4; i++) {
+
+        const sticker =
+            commons[Math.floor(Math.random() * commons.length)];
+
+        const isShiny = Math.random() < 0.1;
+
+        rewards.push({
+            ...sticker,
+            is_shiny: isShiny
+        });
+
+        await addToInventory(sticker.id, isShiny);
+    }
+
+    // 2. marcar como claimed
+    const { error } = await client
+        .from("mission_rewards")
+        .update({ claimed: true })
+        .eq("id", reward.id);
+
+    if (error) {
+        console.error(error);
+        alert("Erro ao resgatar missão");
+        return;
+    }
+
+    // 3. mostra reward
+    showRewards(rewards);
+
+    // 4. ATUALIZA UI SEM REFRESH (ESSENCIAL)
+    await loadMissionPacks();
 }
