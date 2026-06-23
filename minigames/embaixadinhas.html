@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Embaixadinhas - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at bottom left, rgba(37, 99, 235, .22), transparent 30%),
+                radial-gradient(circle at bottom center, rgba(250, 204, 21, .15), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(34, 197, 94, .20), transparent 30%),
+                linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%;
+            max-width: 430px;
+            height: 92vh;
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hud-header {
+            padding: 15px;
+            background: var(--card);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            z-index: 10;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, .05);
+            border-radius: 14px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-box small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        #combo-banner {
+            background: rgba(250, 204, 21, 0.15);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+            border-radius: 16px;
+            margin-top: 10px;
+            padding: 8px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--yellow);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        #game-space {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background: rgba(34, 197, 94, 0.02);
+        }
+
+        /* 🚀 BOLA COM HITBOX INVISÍVEL AMPLIADA PARA FACILITAR NO PC/MOBILE */
+        #football {
+            position: absolute;
+            width: 55px;
+            height: 55px;
+            font-size: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 5;
+            touch-action: manipulation;
+            border-radius: 50%;
+            transition: transform 0.05s linear;
+        }
+
+        /* Área invisível expandida para cliques (fácil de acertar com o mouse) */
+        #football::before {
+            content: "";
+            position: absolute;
+            width: 160px; 
+            height: 160px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            /* background: rgba(255, 255, 255, 0.1); */ /* Descomente para testar visualmente o tamanho do clique */
+        }
+
+        /* Modais */
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-height: 85vh;
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            overflow-y: auto;
+        }
+
+        .screen-content h2 {
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .screen-content p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .ranking-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .ranking-table th {
+            color: var(--muted);
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ranking-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ranking-table tr:last-child td {
+            border: none;
+        }
+
+        .pos-1 { color: var(--yellow); font-weight: 700; }
+        .pos-2 { color: #e2e8f0; font-weight: 700; }
+        .pos-3 { color: #cd7f32; font-weight: 700; }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div class="hud-header">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <small>PONTOS</small>
+                    <span id="score-txt" style="color: var(--green);">0</span>
+                </div>
+                <div class="stat-box">
+                    <small>MULTIPLICADOR</small>
+                    <span id="multiplier-txt" style="color: var(--yellow);">x1</span>
+                </div>
+                <div class="stat-box">
+                    <small>TEMPO</small>
+                    <span id="time-txt" style="color: #ef4444;">60s</span>
+                </div>
+            </div>
+            <div id="combo-banner">
+                BATA NAS LATERAIS PARA AUMENTAR O COMBO!
+            </div>
+        </div>
+
+        <div id="game-space">
+            <div id="football" class="hidden">⚽</div>
+        </div>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 10px;">⚽</div>
+                <h2>Desafio de Embaixadinhas</h2>
+                <p>Mostre o seu controle de bola! Toque na bola antes que ela caia no chão para mantê-la voando.</p>
+                <p><strong>Estratégia:</strong> Faça a bola quicar nas <b>paredes laterais</b>. Cada colisão aumenta a velocidade e adiciona <b>+1 ao Multiplicador de pontos</b>!</p>
+                <p><strong>Meta mínima:</strong> <span id="min-score-text" style="color: var(--yellow); font-weight: 700;">150</span> pontos</p>
+                <button onclick="startGame()">Começar Desafio</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
+                <h2>Fim de Jogo!</h2>
+                
+                <div class="reward-section" id="reward-status">
+                    VERIFICANDO RESULTADOS...
+                </div>
+
+                <h3 style="text-align: left; margin-top: 20px; font-size: 16px; color: var(--muted);">📊 Top 5 Líderes da Escola</h3>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Jogador</th>
+                            <th style="text-align: right;">Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-body">
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: var(--muted);">Carregando ranking...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button onclick="restartGame()">Jogar Novamente</button>
+                <button onclick="goToPacks()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); margin-top: 8px;">Voltar aos Pacotes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const MIN_SCORE = 50;
+        document.getElementById("min-score-text").innerText = MIN_SCORE;
+
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) {
+            window.location.href = "../index.html";
+        }
+
+        // Slug corrigida conforme especificado
+        const missionSlug = "embaixadinhas";
+
+        /* ELEMENTOS */
+        const gameSpace = document.getElementById('game-space');
+        const football = document.getElementById('football');
+        const scoreTxt = document.getElementById('score-txt');
+        const multiplierTxt = document.getElementById('multiplier-txt');
+        const timeTxt = document.getElementById('time-txt');
+        const comboBanner = document.getElementById('combo-banner');
+        
+        const modalStart = document.getElementById('modal-start');
+        const modalEnd = document.getElementById('modal-end');
+        const rewardStatus = document.getElementById('reward-status');
+        const rankingBody = document.getElementById('ranking-body');
+
+        /* ESTADO */
+        let score = 0;
+        let multiplier = 1;
+        let timeLeft = 60;
+        let gameActive = false;
+
+        let ballX = 0;
+        let ballY = 0;
+        let velX = 0;
+        let velY = 0;
+        let ballRotation = 0;
+        
+        const gravity = 0.32;
+        const bounceReduction = -8.5; 
+        const baseSpeedIncrease = 1.10; 
+
+        let loopEngine;
+        let loopTimer;
+
+        function startGame() {
+            modalStart.classList.add('hidden');
+            modalEnd.classList.add('hidden');
+            football.classList.remove('hidden');
+            
+            score = 0;
+            multiplier = 1;
+            timeLeft = 60;
+            gameActive = true;
+
+            scoreTxt.innerText = score;
+            multiplierTxt.innerText = `x${multiplier}`;
+            timeTxt.innerText = `${timeLeft}s`;
+            comboBanner.innerText = "BATA NAS LATERAIS PARA AUMENTAR O COMBO!";
+
+            resetBall();
+
+            // Captura de clicks robusta tanto para PC quanto Mobile
+            football.onclick = (e) => { e.stopPropagation(); kickBall(e); };
+            football.ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); kickBall(e); };
+
+            loopEngine = setInterval(updatePhysics, 1000 / 60);
+            loopTimer = setInterval(updateTimer, 1000);
+        }
+
+        function resetBall() {
+            const spaceWidth = gameSpace.offsetWidth;
+            ballX = (spaceWidth / 2) - 27;
+            ballY = 80;
+            velX = (Math.random() - 0.5) * 5; 
+            velY = 0;
+        }
+
+        function updatePhysics() {
+            if (!gameActive) return;
+
+            velY += gravity;
+            ballX += velX;
+            ballY += velY;
+
+            const spaceWidth = gameSpace.offsetWidth;
+            const spaceHeight = gameSpace.offsetHeight;
+
+            if (ballX <= 0) {
+                ballX = 0;
+                velX = -velX * baseSpeedIncrease;
+                incrementMultiplier();
+            }
+            else if (ballX >= spaceWidth - 55) {
+                ballX = spaceWidth - 55;
+                velX = -velX * baseSpeedIncrease;
+                incrementMultiplier();
+            }
+
+            // Queda no chão reseta combo
+            if (ballY >= spaceHeight - 55) {
+                multiplier = 1;
+                multiplierTxt.innerText = `x${multiplier}`;
+                multiplierTxt.style.color = 'var(--yellow)';
+                comboBanner.innerText = "A BOLA CAIU! COMBO ZERADO!";
+                comboBanner.style.background = "rgba(239, 68, 68, 0.15)";
+                comboBanner.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                resetBall();
+            }
+
+            ballRotation += velX * 1.8;
+            football.style.left = `${ballX}px`;
+            football.style.top = `${ballY}px`;
+            football.style.transform = `rotate(${ballRotation}deg)`;
+        }
+
+        function incrementMultiplier() {
+            multiplier++;
+            multiplierTxt.innerText = `x${multiplier}`;
+            multiplierTxt.style.color = '#22c55e';
+            comboBanner.innerText = `COMBO LATERAL! CADA TOQUE VALE: ${multiplier}`;
+            comboBanner.style.background = "rgba(34, 197, 94, 0.15)";
+            comboBanner.style.borderColor = "rgba(34, 197, 94, 0.3)";
+        }
+
+        function kickBall(e) {
+            if (!gameActive) return;
+
+            // Impulso vertical estável
+            velY = bounceReduction;
+
+            // Identifica ponto do clique para efeito horizontal dinâmico
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const rect = football.getBoundingClientRect();
+            const ballCenter = rect.left + (rect.width / 2);
+            const hitOffset = clientX - ballCenter;
+
+            velX = hitOffset * 0.25;
+
+            // Soma a pontuação multiplicada
+            score += 1 * multiplier;
+            scoreTxt.innerText = score;
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timeTxt.innerText = `${timeLeft}s`;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        /* LÓGICA DE ATUALIZAÇÃO E RECOMPENSA */
+        async function endGame() {
+            gameActive = false;
+            clearInterval(loopEngine);
+            clearInterval(loopTimer);
+            football.classList.add('hidden');
+            modalEnd.classList.remove('hidden');
+
+            rewardStatus.innerHTML = "Verificando recordes...";
+
+            try {
+                // 1. Busca se já existe um score anterior do aluno nesta missão
+                const { data: existingScore } = await client
+                    .from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug)
+                    .maybeSingle();
+
+                let melhorScore = score;
+
+                if (!existingScore) {
+                    // Se não existe, insere o primeiro
+                    await client.from("mission_scores").insert([{
+                        player_id: player.id,
+                        mission_slug: missionSlug,
+                        score: score
+                    }]);
+                } else if (score > existingScore.score) {
+                    // Substitui APENAS se for maior
+                    await client
+                        .from("mission_scores")
+                        .update({ score: score })
+                        .eq("id", existingScore.id);
+                } else {
+                    melhorScore = existingScore.score;
+                }
+
+                let htmlResultado = `<div style="font-size:18px; margin-bottom:10px;">Sua Pontuação: <b>${score}</b></div>`;
+                if(score >= melhorScore && existingScore) {
+                    htmlResultado += `<p style="color:var(--green); font-size:12px; margin-bottom:10px;"> Novo Recorde Pessoal!</p>`;
+                }
+
+                // 2. Verifica se a recompensa já foi dada no passado para esta missão
+                const { data: existingReward } = await client
+                    .from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug)
+                    .maybeSingle();
+
+                if (existingReward) {
+                    htmlResultado += `<p style="color: var(--muted);">Você já garantiu seu pacote nesta missão.</p>`;
+                } else if (melhorScore < MIN_SCORE) {
+                    // Verifica se a pontuação mínima foi batida nesta partida ou nas anteriores
+                    htmlResultado += `<p style="color:#ef4444;">Meta mínima não atingida (${MIN_SCORE} pts). Tente de novo!</p>`;
+                } else {
+                    // Libera recompensa estruturada igual ao jogo anterior
+                    const { error: errorReward } = await client
+                        .from("mission_rewards")
+                        .insert([{
+                            player_id: player.id,
+                            mission_slug: missionSlug,
+                            reward_type: "pack",
+                            reward_value: 1,
+                            unlocked: true,
+                            claimed: false
+                        }]);
+
+                    if (!errorReward) {
+                        htmlResultado += `<p style="color:#22c55e; font-weight:700;">🎁 Incrível! Pacote Adicional Liberado com Sucesso!</p>`;
+                    } else {
+                        htmlResultado += `<p style="color:#ef4444;">Erro ao gerar prêmio.</p>`;
+                    }
+                }
+
+                rewardStatus.innerHTML = htmlResultado;
+
+                // 3. Monta o ranking trazendo o nome e emoji da tabela 'players'
+                await fetchLeaderboard();
+
+            } catch (err) {
+                console.error(err);
+                rewardStatus.innerText = "Erro ao conectar ao banco de dados.";
+            }
+        }
+
+        /* RANKING COM JOIN DA TABELA PLAYERS */
+        async function fetchLeaderboard() {
+            rankingBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--muted);">Carregando Top 5...</td></tr>`;
+            
+            // Busca o Top 5 scores e faz um "join" automático trazendo os dados da tabela players
+            const { data: leaderboard, error } = await client
+                .from("mission_scores")
+                .select(`
+                    score,
+                    player_id,
+                    players!mission_scores_player_id_fkey (
+                        name,
+                        emoji
+                    )
+                `)
+                .eq("mission_slug", missionSlug)
+                .order("score", { ascending: false })
+                .limit(5);
+
+            if (error || !leaderboard) {
+                console.log(error);
+                rankingBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #ef4444;">Não foi possível carregar o ranking.</td></tr>`;
+                return;
+            }
+
+            rankingBody.innerHTML = "";
+            
+            leaderboard.forEach((row, index) => {
+                const posicao = index + 1;
+                
+                // Extrai os dados do join do player seguro
+                const playerData = row.players;
+                let nomeExibicao = "Jogador Misterioso";
+                let emojiExibicao = "⚽";
+
+                if (playerData) {
+                    nomeExibicao = playerData.name;
+                    emojiExibicao = playerData.emoji || "⚽";
+                }
+
+                // Se for o próprio player que está visualizando, destaca a linha
+                const eVoce = row.player_id === player.id;
+
+                rankingBody.innerHTML += `
+                    <tr style="${eVoce ? 'background: rgba(34, 197, 94, 0.1);' : ''}">
+                        <td class="pos-${posicao}" style="padding-left: 5px;">#${posicao}</td>
+                        <td style="${eVoce ? 'font-weight:700; color:var(--green);' : ''}">
+                            ${emojiExibicao} ${nomeExibicao} ${eVoce ? '(Você)' : ''}
+                        </td>
+                        <td style="text-align: right; font-weight: 700; padding-right: 5px;">${row.score}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function restartGame() {
+            modalEnd.classList.add('hidden');
+            modalStart.classList.remove('hidden');
+        }
+
+        function goToPacks() {
+            window.location.href = "../menu/menu.html"; 
+        }
+    </script>
+</body>
+
+</html>
