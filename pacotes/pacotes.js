@@ -271,7 +271,7 @@ async function loadMissionPacks() {
         let nomeMissao = "Pacote de Missão";
         let emojiMissao = "🎯";
 
-        // Personalização dinâmica baseada no mission_slug
+// Personalização dinâmica baseada no mission_slug
         switch (registro.mission_slug) {
             case "embaixadinhas":
                 nomeMissao = "Missão Embaixadinha";
@@ -289,8 +289,12 @@ async function loadMissionPacks() {
                 nomeMissao = "Missão Sincronia";
                 emojiMissao = "🧠";
                 break;
+            case "amigos1":
+                nomeMissao = "Missão Rede de Amigos";
+                emojiMissao = "🤝";
+                break;
             default:
-                // Fallback amigável caso tenha algum outro slug no banco
+                // Fallback amigável caso tenha algum outro slug no banco futuramente
                 if (registro.mission_slug) {
                     nomeMissao = `Missão ${registro.mission_slug.toUpperCase()}`;
                 }
