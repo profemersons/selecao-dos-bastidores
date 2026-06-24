@@ -2,161 +2,92 @@
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>
-        Operação Copa - Pacotes
-    </title>
-
+    <title>Operação Copa - Pacotes</title>
     <link rel="stylesheet" href="pacotes.css">
     <link rel="stylesheet" href="../menu/menu.css">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 </head>
 
 <body>
 
     <div id="loading">
-
         Carregando...
-
     </div>
 
     <div id="app" style="display:none;">
-
         <header class="header">
-
             <h1>Pacotes do Dia</h1>
-
             <p id="remainingText"></p>
             <p class="pack-info">
                 Novos pacotes disponíveis todos os dias às 07:00.
             </p>
-
         </header>
 
         <main>
-
             <div class="packs">
-
                 <div class="pack" id="pack1">
-
                     <div class="pack-emoji">🎁</div>
-
-                    <div class="pack-title">
-                        Pacote #1
-                    </div>
-
-                    <div class="pack-info">
-                        4 figurinhas
-                    </div>
-
+                    <div class="pack-title">Pacote #1</div>
+                    <div class="pack-info">4 figurinhas</div>
                 </div>
 
                 <div class="pack" id="pack2">
-
                     <div class="pack-emoji">🎁</div>
-
-                    <div class="pack-title">
-                        Pacote #2
-                    </div>
-
-                    <div class="pack-info">
-                        4 figurinhas
-                    </div>
-
+                    <div class="pack-title">Pacote #2</div>
+                    <div class="pack-info">4 figurinhas</div>
                 </div>
 
                 <div class="pack" id="pack3">
-
                     <div class="pack-emoji">🎁</div>
-
-                    <div class="pack-title">
-                        Pacote #3
-                    </div>
-
-                    <div class="pack-info">
-                        4 figurinhas
-                    </div>
-
-                </div>
-                <!-- =========================
-PACOTES DE MISSÃO (NOVO)
-========================= -->
-                <div class="mission-section">
-
-                    <h2 class="section-title">
-                        🎯 Pacotes de Missão
-                    </h2>
-
-                    <div class="packs" id="missionPacks">
-                        <!-- JS vai preencher depois -->
-                    </div>
-
+                    <div class="pack-title">Pacote #3</div>
+                    <div class="pack-info">4 figurinhas</div>
                 </div>
             </div>
 
+            <h2 class="section-title">🎯 Pacotes de Missão</h2>
+            <div class="mission-section">
+                <div class="packs" id="missionPacks">
+                    </div>
+            </div>
         </main>
-
     </div>
 
     <div id="modal" class="modal hidden">
-
         <div class="modal-content">
-
-            <h2>
-                🎉 Pacote Aberto
-            </h2>
-
+            <h2>🎉 Pacote Aberto</h2>
             <div id="resultContainer"></div>
-
-            <button id="closeResult" style="display:none;">
-                Fechar
-            </button>
-
+            <button id="closeResult" style="display:none;">Fechar</button>
         </div>
-
     </div>
 
     <nav class="menu-bar">
-
         <button onclick="goAlbum()">
             <span>📖</span>
             <small>Álbum</small>
         </button>
-
         <button onclick="goPacks()">
             <span>📦</span>
             <small>Pacotes</small>
         </button>
-
         <button onclick="goMissions()">
             <span>🎯</span>
             <small>Missões</small>
         </button>
-
         <button class="center-btn" onclick="goTrades()">
             <span>🔁</span>
             <small>Trocas</small>
         </button>
-
         <button onclick="goProfile()">
             <span>👤</span>
             <small>Perfil</small>
         </button>
-
     </nav>
 
     <script src="../config.js"></script>
-
     <script src="../menu/menu.js"></script>
     <script src="../shared/stats.js"></script>
     <script src="pacotes.js"></script>
-
 </body>
-
 </html>

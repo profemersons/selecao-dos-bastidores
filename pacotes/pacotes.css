@@ -60,7 +60,7 @@ HEADER
 }
 
 /* =========================
-PACOTES
+PACOTES (PADRÃO)
 ========================= */
 
 .packs{
@@ -73,7 +73,6 @@ PACOTES
 }
 
 .pack{
-
     background:
     rgba(255,255,255,.08);
 
@@ -91,6 +90,8 @@ PACOTES
     cursor:pointer;
 
     transition:.2s;
+    position: relative;
+    overflow: hidden;
 }
 
 .pack:hover{
@@ -117,10 +118,61 @@ PACOTES
     margin-top:8px;
 }
 
+/* =========================
+ESTADOS DOS PACOTES (FEEDBACK VISUAL)
+========================= */
+
+/* Usado / Já Aberto */
 .used{
     opacity:.35;
     filter:grayscale(1);
     pointer-events:none;
+}
+
+/* Novo Estado: Bloqueado (Ainda não liberado na missão) */
+.pack.locked {
+    opacity: 0.45;
+    filter: grayscale(0.8);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Badge/Selo de status fixo dentro do card */
+.pack-status-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-locked {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-available {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    animation: pulseGlow 1.5s infinite;
+}
+
+.badge-claimed {
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { transform: scale(1.03); box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.2); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
 }
 
 /* =========================
@@ -147,7 +199,6 @@ MODAL
 }
 
 .modal-content{
-
     width:100%;
     max-width:500px;
 
@@ -182,7 +233,6 @@ RECOMPENSAS
 }
 
 .reward-emoji{
-
     width:90px;
     height:90px;
 
@@ -209,7 +259,6 @@ BOTÕES
 ========================= */
 
 button{
-
     width:100%;
 
     padding:14px;
@@ -237,7 +286,6 @@ MENU INFERIOR
 ========================= */
 
 .bottom-nav{
-
     position:fixed;
 
     bottom:0;
@@ -259,7 +307,6 @@ MENU INFERIOR
 }
 
 .bottom-nav button{
-
     width:auto;
 
     background:none;
@@ -276,23 +323,21 @@ MENU INFERIOR
 }
 
 /* =========================
-ANIMAÇÕES
+ANIMAÇÕES DO ÁLBUM
 ========================= */
 
 @keyframes pop{
-
     from{
         transform:scale(.5);
         opacity:0;
     }
-
     to{
         transform:scale(1);
         opacity:1;
     }
 }
-.reward-image-wrapper{
 
+.reward-image-wrapper{
     width:220px;
     height:300px;
 
@@ -309,7 +354,6 @@ ANIMAÇÕES
 }
 
 .reward-image{
-
     width:100%;
     height:100%;
 
@@ -319,7 +363,6 @@ ANIMAÇÕES
 }
 
 .reward-image-shiny{
-
     border:3px solid #ffdf00;
 
     box-shadow:
@@ -330,29 +373,25 @@ ANIMAÇÕES
 }
 
 @keyframes shinyPulse{
-
     0%{
         transform:scale(1);
         filter:brightness(1);
     }
-
     50%{
         transform:scale(1.03);
         filter:brightness(1.25);
     }
-
     100%{
         transform:scale(1);
         filter:brightness(1);
     }
 }
-.reward-card{
 
+.reward-card{
     text-align:center;
 }
 
 .reward-name{
-
     margin-top:14px;
 
     font-size:20px;
@@ -360,7 +399,6 @@ ANIMAÇÕES
 }
 
 .reward-next{
-
     margin-top:14px;
 
     opacity:.7;
@@ -369,7 +407,6 @@ ANIMAÇÕES
 }
 
 .reward-shiny{
-
     color:#ffdf00;
 
     font-weight:bold;
@@ -381,29 +418,24 @@ ANIMAÇÕES
 }
 
 .pack-finished{
-
     text-align:center;
 
     padding:30px 10px;
 }
 
 @keyframes shinyText{
-
     0%{
         opacity:.7;
     }
-
     50%{
         opacity:1;
     }
-
     100%{
         opacity:.7;
     }
 }
 
 .sticker-flip{
-
     perspective:1000px;
 
     width:220px;
@@ -413,7 +445,6 @@ ANIMAÇÕES
 }
 
 .sticker-inner{
-
     position:relative;
 
     width:100%;
@@ -427,7 +458,6 @@ ANIMAÇÕES
 
 .sticker-front,
 .sticker-back{
-
     position:absolute;
 
     width:100%;
@@ -441,7 +471,6 @@ ANIMAÇÕES
 }
 
 .sticker-back{
-
     display:flex;
     align-items:center;
     justify-content:center;
@@ -460,23 +489,19 @@ ANIMAÇÕES
 }
 
 .sticker-front{
-
     transform:rotateY(180deg);
 }
 
 @keyframes revealCard{
-
     from{
         transform:rotateY(0deg);
     }
-
     to{
         transform:rotateY(180deg);
     }
 }
 
 .reward-shiny-banner{
-
     margin-bottom:14px;
 
     padding:10px;
@@ -505,27 +530,11 @@ ANIMAÇÕES
     animation-delay:.8s;
 }
 
-@keyframes shinyBanner{
-
-    0%{
-        transform:scale(1);
-    }
-
-    50%{
-        transform:scale(1.05);
-    }
-
-    100%{
-        transform:scale(1);
-    }
-}
-
 .sticker-flip{
     position:relative;
 }
 
 .shiny-particles{
-
     position:absolute;
 
     inset:-30px;
@@ -537,7 +546,6 @@ ANIMAÇÕES
 }
 
 .shiny-particles span{
-
     position:absolute;
 
     color:#ffdf00;
@@ -545,70 +553,54 @@ ANIMAÇÕES
     font-size:22px;
 }
 
-.shiny-particles span:nth-child(1){
-    top:0;
-    left:50%;
-}
-
-.shiny-particles span:nth-child(2){
-    top:20%;
-    right:0;
-}
-
-.shiny-particles span:nth-child(3){
-    bottom:20%;
-    right:10%;
-}
-
-.shiny-particles span:nth-child(4){
-    bottom:0;
-    left:50%;
-}
-
-.shiny-particles span:nth-child(5){
-    bottom:20%;
-    left:0;
-}
-
-.shiny-particles span:nth-child(6){
-    top:20%;
-    left:10%;
-}
+.shiny-particles span:nth-child(1){ top:0; left:50%; }
+.shiny-particles span:nth-child(2){ top:20%; right:0; }
+.shiny-particles span:nth-child(3){ bottom:20%; right:10%; }
+.shiny-particles span:nth-child(4){ bottom:0; left:50%; }
+.shiny-particles span:nth-child(5){ bottom:20%; left:0; }
+.shiny-particles span:nth-child(6){ top:20%; left:10%; }
 
 @keyframes particleSpin{
-
-    from{
-        transform:rotate(0deg);
-    }
-
-    to{
-        transform:rotate(360deg);
-    }
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
 }
-@keyframes showShiny{
 
+@keyframes showShiny{
     from{
         opacity:0;
         transform:translateY(-10px);
     }
-
     to{
         opacity:1;
         transform:translateY(0);
     }
 }
+
+/* =========================
+SEÇÕES DE MISSÕES
+========================= */
 .section-title {
-    margin: 20px 0 10px;
+    margin: 25px 0 10px;
     font-size: 16px;
-    opacity: .8;
-    text-align: center;
+    font-weight: bold;
+    opacity: .9;
+    text-align: left;
+    padding-left: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--yellow, #facc15);
 }
 
 .mission-section {
     padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
+
 .pack.mission {
     border: 1px solid rgba(250, 204, 21, 0.4);
+    background: rgba(250, 204, 21, 0.04);
 }
 
 .pack.mission .pack-emoji {
