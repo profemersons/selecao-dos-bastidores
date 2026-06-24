@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Missão Rede de Amigos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%; max-width: 430px; height: 92vh; position: relative;
+            background: rgba(15, 23, 42, 0.6); border-radius: 24px; border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px); overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* ÁREA PRINCIPAL PÓS-INTRODUÇÃO */
+        #game-space { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 24px; 
+            overflow-y: auto; 
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .counter-display {
+            font-size: 46px;
+            font-weight: 700;
+            color: var(--yellow);
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+        }
+
+        /* MODAIS / OVERLAYS */
+        .screen-overlay { position: absolute; inset: 0; background: rgba(7, 17, 31, 0.96); display: flex; justify-content: center; align-items: center; padding: 24px; z-index: 200; text-align: center; }
+        .screen-content { width: 100%; background: var(--bg-light); border-radius: 24px; padding: 24px; border: 1px solid rgba(255, 255, 255, .08); max-height: 85vh; overflow-y: auto; }
+        
+        button { 
+            width: 100%; border: none; border-radius: 16px; padding: 14px; cursor: pointer; color: white; 
+            font-weight: 600; background: linear-gradient(180deg, #3b82f6, #2563eb); margin-top: 10px; 
+            font-family: 'Poppins', sans-serif; transition: background 0.2s;
+        }
+        button:disabled { background: #374151; color: var(--muted); cursor: not-allowed; }
+
+        /* LISTA DO RANKING PADRÃO */
+        .ranking-container { width: 100%; margin-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .rank-card {
+            background: rgba(255, 255, 255, 0.05); border-radius: 18px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05);
+            text-align: left;
+        }
+        .rank-pos { font-weight: 800; font-size: 18px; width: 30px; color: var(--muted); font-family: monospace; }
+        .rank-pos.pos-1 { color: #facc15; }
+        .rank-pos.pos-2 { color: #e2e8f0; }
+        .rank-pos.pos-3 { color: #cd7f32; }
+
+        .rank-info { flex: 1; }
+        .rank-name { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .rank-turma { font-size: 10px; color: var(--muted); font-weight: 500; }
+        .rank-score { font-weight: 800; font-size: 15px; color: var(--blue); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+
+    <div id="game-space">
+        <div class="main-card">
+            <div style="font-size: 40px; margin-bottom: 5px;">🤝</div>
+            <h2 style="font-size: 18px; margin-bottom: 5px;">Verificação de Vínculos</h2>
+            <div class="counter-display" id="friends-total">-- / 10</div>
+            <p id="status-desc" style="font-size: 13px; color: var(--muted);">Clique para validar seu progresso com o banco.</p>
+        </div>
+        
+        <button id="action-btn" onclick="checkFriendsRequirement()">Verificar Conexões</button>
+        <button onclick="window.location.href='../pacotes/pacotes.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); margin-top: 8px;">Ir para Meus Pacotes</button>
+    </div>
+
+    <div id="modal-start" class="screen-overlay">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">🤝</div>
+            <h2>Missão Rede de Amigos</h2>
+            <p style="margin-top: 15px; font-size: 14px; line-height: 1.5; color: var(--muted);">
+                Para conquistar este pacote especial de recompensas, você precisa expandir seu círculo de contatos na comunidade do Álbum!
+            </p>
+            <p style="margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--muted);">
+                Acesse a aba de buscas, adicione outros alunos e monte sua rede. Quando alcançar o objetivo, sua recompensa será despachada.
+            </p>
+            <p style="margin-top: 15px;"><strong>Meta Mínima:</strong> <span style="color:var(--yellow); font-weight: 700;">10 Amigos</span></p>
+            
+            <button onclick="advanceToVerification()">Acessar Desafio</button>
+        </div>
+    </div>
+
+    <div id="modal-end" class="screen-overlay hidden">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
+            <h2>Status da Missão</h2>
+            <div id="reward-status" style="background: rgba(255,255,255,0.04); padding:15px; border-radius:16px; margin: 15px 0; border: 1px dashed rgba(255,255,255,0.1); font-size: 14px;">
+                Analisando banco...
+            </div>
+            
+            <h3 style="text-align: left; font-size: 13px; color: var(--muted); margin-top: 15px; text-transform: uppercase;">📊 Mestres da Conexão</h3>
+            <div class="ranking-container" id="ranking-body">
+                </div>
+            
+            <button onclick="closeEndModal()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15)">Voltar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+
+<script>
+    const player = JSON.parse(localStorage.getItem("player"));
+    if (!player) window.location.href = "../index.html";
+
+    const missionSlug = "amigos1";
+    let isProcessing = false;
+
+    // Fecha a introdução e renderiza a tela base
+    function advanceToVerification() {
+        document.getElementById('modal-start').classList.add('hidden');
+    }
+
+    // Executa a validação após o clique explícito do botão
+    async function checkFriendsRequirement() {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        const actionBtn = document.getElementById("action-btn");
+        actionBtn.disabled = true;
+        actionBtn.innerText = "Consultando dados...";
+
+        try {
+            // Busca a contagem atualizada em tempo real na tabela players
+            const { data: currentData, error: errPlayer } = await client
+                .from("players")
+                .select("friend_count")
+                .eq("id", player.id)
+                .single();
+
+            if (errPlayer || !currentData) {
+                alert("Erro ao validar contagem no servidor.");
+                resetButtonState();
+                return;
+            }
+
+            const totalFriends = currentData.friend_count || 0;
+            document.getElementById("friends-total").innerText = `${totalFriends} / 10`;
+
+            // Verifica se este aluno já possui entrada para esta missão em mission_rewards
+            const { data: rewardRecord } = await client
+                .from("mission_rewards")
+                .select("*")
+                .eq("player_id", player.id)
+                .eq("mission_slug", missionSlug)
+                .maybeSingle();
+
+            const rewardStatusDiv = document.getElementById("reward-status");
+            let feedbackHTML = `<div style="font-size:16px; margin-bottom:5px;">Amigos Registrados: <b>${totalFriends}</b></div>`;
+
+            if (rewardRecord) {
+                if (rewardRecord.claimed) {
+                    feedbackHTML += `<p style="color:var(--green); font-size:12px;">🎉 Recompensa já foi coletada e aberta!</p>`;
+                } else {
+                    feedbackHTML += `<p style="color:var(--yellow); font-size:12px;">🎁 Pacote já disponível na sua área de pacotes!</p>`;
+                }
+            } else if (totalFriends >= 10) {
+                // Atende ao requisito e ainda não foi criado o prêmio -> Registra no banco
+                const { error: errInsert } = await client
+                    .from("mission_rewards")
+                    .insert([{
+                        player_id: player.id,
+                        mission_slug: missionSlug,
+                        claimed: false
+                    }]);
+
+                if (errInsert) throw errInsert;
+                feedbackHTML += `<p style="color:var(--green); font-weight:700; font-size:12px;">🎁 Excelente! Seu pacote de recompensa foi depositado com sucesso.</p>`;
+            } else {
+                feedbackHTML += `<p style="color:#ef4444; font-size:12px;">Meta insuficiente. Você precisa de mais ${10 - totalFriends} amigos.</p>`;
+            }
+
+            rewardStatusDiv.innerHTML = feedbackHTML;
+            
+            // Renderiza o ranking coletando o turma_area
+            await fetchLeaderboard();
+            
+            // Abre a tela de resultado/ranking
+            document.getElementById('modal-end').classList.remove('hidden');
+
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao estabelecer conexão de rede.");
+        } finally {
+            resetButtonState();
+        }
+    }
+
+    function resetButtonState() {
+        isProcessing = false;
+        const actionBtn = document.getElementById("action-btn");
+        actionBtn.disabled = false;
+        actionBtn.innerText = "Verificar Conexões";
+    }
+
+    function closeEndModal() {
+        document.getElementById('modal-end').classList.add('hidden');
+    }
+
+    // Busca o Top 10 trazendo informações completas do próprio banco de dados
+    async function fetchLeaderboard() {
+        const rankingBody = document.getElementById('ranking-body');
+        rankingBody.innerHTML = "<div style='color:var(--muted); font-size:12px;'>Carregando ranking...</div>";
+
+        const { data: leaderboard, error } = await client
+            .from("players")
+            .select("id, name, emoji, turma_area, friend_count")
+            .order("friend_count", { ascending: false })
+            .limit(10);
+
+        if (error || !leaderboard) {
+            rankingBody.innerHTML = "<div style='color:var(--muted)'>Ranking indisponível no momento</div>";
+            return;
+        }
+
+        rankingBody.innerHTML = "";
+        
+        leaderboard.forEach((row, index) => {
+            const posicao = index + 1;
+            const eVoce = row.id === player.id;
+            
+            const nomeExibicao = row.name || "Jogador";
+            const emojiExibicao = row.emoji || "🤝";
+            const turmaExibicao = row.turma_area || "Geral";
+            const amigosContagem = row.friend_count || 0;
+
+            rankingBody.innerHTML += `
+                <div class="rank-card" style="${eVoce ? 'background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.2);' : ''}">
+                    <div class="rank-pos pos-${posicao}">#${posicao}</div>
+                    <div class="rank-info">
+                        <div class="rank-name" style="${eVoce ? 'color:var(--green);' : ''}">${emojiExibicao} ${nomeExibicao}</div>
+                        <div class="rank-turma">${turmaExibicao}</div>
+                    </div>
+                    <div class="rank-score" style="color: var(--yellow);">${amigosContagem} 👤</div>
+                </div>`;
+        });
+    }
+</script>
+</body>
+</html>

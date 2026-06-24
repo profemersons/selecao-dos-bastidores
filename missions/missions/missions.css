@@ -1,0 +1,131 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #050816, #111827, #0d3b2e);
+    color: white;
+    padding-bottom: 90px;
+}
+
+.header {
+    text-align: center;
+    padding: 40px 20px 20px;
+}
+
+#missionsContainer {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* DIA */
+.mission-day h2 {
+    font-size: 16px;
+    opacity: 0.7;
+    margin-bottom: 12px;
+}
+
+/* CARD IGUAL PACK */
+.mission-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px;
+    padding: 24px;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.mission-card h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.mission-card p {
+    opacity: 0.7;
+    margin: 8px 0 12px;
+    font-size: 14px;
+}
+
+/* BOTÃO IGUAL PACK */
+.mission-card button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #009c3b, #007a2f);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* BLOQUEADO */
+.mission-card.locked {
+    opacity: 0.35;
+    filter: grayscale(1);
+}
+
+/* HOVER LEVE */
+.mission-card:not(.locked):hover {
+    transform: translateY(-2px);
+}
+
+/* MENU FIXO */
+
+/* =========================
+MENU
+========================= */
+
+.bottom-nav{
+
+    position:fixed;
+
+    bottom:0;
+    left:0;
+    right:0;
+
+    background:
+    rgba(5,8,22,.95);
+
+    backdrop-filter:blur(10px);
+
+    border-top:
+    1px solid rgba(255,255,255,.08);
+
+    display:flex;
+
+    justify-content:space-around;
+
+    padding:12px;
+
+    z-index:999;
+}
+
+.bottom-nav button{
+
+    width:auto;
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-size:24px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.bottom-nav button:hover{
+
+    transform:
+    scale(1.1);
+}
+
+.bottom-nav .active{
+
+    transform:
+    scale(1.15);
+}

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ritmo de Campeão - Genius das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --blue: #3b82f6;   /* Limpeza*/
+            --red: #ef4444;    /* Segurança */
+            --yellow: #facc15; /* Alimentação */
+            --green: #22c55e;  /* Manutenção */
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent),
+                        linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%; max-width: 430px; height: 92vh; position: relative;
+            background: rgba(15, 23, 42, 0.7); border-radius: 32px; border: 1px solid rgba(255, 255, 255, .1);
+            backdrop-filter: blur(25px); overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .hud-header { padding: 20px; background: var(--card); border-bottom: 1px solid rgba(255, 255, 255, .1); z-index: 10; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-box { background: rgba(255, 255, 255, .05); border-radius: 16px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-box span { display: block; font-size: 20px; font-weight: 700; color: var(--yellow); }
+        .stat-box small { color: var(--muted); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+        #status-msg {
+            background: rgba(255, 255, 255, 0.05); border-radius: 14px; margin-top: 12px;
+            padding: 10px; text-align: center; font-weight: 600; font-size: 13px; color: var(--blue);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        #game-space { flex: 1; display: flex; justify-content: center; align-items: center; padding: 25px; }
+
+        .genius-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+            width: 100%; max-width: 340px; aspect-ratio: 1 / 1;
+        }
+
+        .sector {
+            border-radius: 28px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid rgba(255,255,255,0.1);
+            position: relative; opacity: 0.35; pointer-events: none;
+        }
+
+        .sector span { font-size: 44px; margin-bottom: 5px; }
+        .sector small { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+
+        /* Estilização por Profissão */
+        .eng { background: #1e3a8a; color: #93c5fd; }
+        .saude { background: #7f1d1d; color: #fca5a5; }
+        .gastro { background: #78350f; color: #fde68a; }
+        .log { background: #064e3b; color: #6ee7b7; }
+
+        .sector.active { opacity: 1; transform: scale(0.94); box-shadow: 0 0 40px currentColor; z-index: 20; border-color: white; }
+
+        /* Telas de Interface */
+        .screen-overlay { position: absolute; inset: 0; background: rgba(7, 17, 31, 0.98); display: flex; justify-content: center; align-items: center; padding: 25px; z-index: 200; text-align: center; }
+        .screen-content { width: 100%; background: var(--bg-light); border-radius: 32px; padding: 30px; border: 1px solid rgba(255, 255, 255, .1); max-height: 85vh; overflow-y: auto; }
+        .screen-content h2 { font-size: 26px; margin-bottom: 12px; letter-spacing: -0.5px; }
+        .screen-content p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+        
+        button { width: 100%; border: none; border-radius: 18px; padding: 16px; cursor: pointer; color: white; font-weight: 700; background: linear-gradient(135deg, #3b82f6, #2563eb); margin-top: 12px; font-size: 16px; transition: transform 0.2s; }
+        button:active { transform: scale(0.98); }
+
+        /* NOVO RANKING ESTILIZADO */
+        .ranking-container { width: 100%; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .rank-card {
+            background: rgba(255, 255, 255, 0.05); border-radius: 18px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05);
+            text-align: left;
+        }
+        .rank-pos { font-weight: 800; font-size: 18px; width: 30px; color: var(--muted); font-family: monospace; }
+        .rank-pos.pos-1 { color: #facc15; }
+        .rank-pos.pos-2 { color: #e2e8f0; }
+        .rank-pos.pos-3 { color: #cd7f32; }
+
+        .rank-info { flex: 1; }
+        .rank-name { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .rank-turma { font-size: 10px; color: var(--muted); font-weight: 500; }
+        .rank-score { font-weight: 800; font-size: 18px; color: var(--blue); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div class="hud-header">
+        <div class="stats-grid">
+            <div class="stat-box"><small>Nível</small><span id="level-txt">0</span></div>
+            <div class="stat-box"><small>Recorde</small><span id="best-txt">0</span></div>
+            <div class="stat-box"><small>Meta</small><span id="target-txt">7</span></div>
+        </div>
+        <div id="status-msg">Iniciando Sistemas...</div>
+    </div>
+
+    <div id="game-space">
+        <div class="genius-grid">
+            <div class="sector eng" data-index="0"><span>🧽</span><small>Limpeza</small></div>
+            <div class="sector saude" data-index="1"><span>🦺</span><small>Segurança</small></div>
+            <div class="sector gastro" data-index="2"><span>🍳</span><small>Alimentação</small></div>
+            <div class="sector log" data-index="3"><span>🛠️</span><small>Manutenção</small></div>
+        </div>
+    </div>
+
+    <div id="modal-start" class="screen-overlay">
+        <div class="screen-content">
+            <div style="font-size: 55px; margin-bottom: 15px;">🧠</div>
+            <h2>Operação Sincronia</h2>
+            <p>O centro operacional do estádio precisa de sincronização! Como Coordenador, você deve memorizar a sequência de ativação dos setores.</p>
+            <p><strong>Meta de Elite:</strong> Complete o <b>Nível 7</b> para garantir sua recompensa.</p>
+            <button onclick="startGame()">Sincronizar Agora</button>
+        </div>
+    </div>
+
+    <div id="modal-end" class="screen-overlay hidden">
+        <div class="screen-content">
+            <div id="end-icon" style="font-size: 55px; margin-bottom: 15px;">⚠️</div>
+            <h2 id="end-title">Sincronia Perdida!</h2>
+            <div id="reward-status" style="background: rgba(255, 255, 255, 0.04); padding: 20px; border-radius: 24px; margin: 20px 0; border: 1px dashed rgba(255,255,255,0.2);"></div>
+            
+            <h3 style="text-align: left; font-size: 13px; color: var(--muted); margin-top: 15px; text-transform: uppercase;">📊 Líderes Operacionais</h3>
+            <div class="ranking-container" id="ranking-body"></div>
+            
+            <button onclick="location.reload()">Reiniciar Jogo</button>
+            <button onclick="goAlbum()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15)">Voltar ao Álbum</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<script src="../menu/menu.js"></script>
+
+<script>
+    const player = JSON.parse(localStorage.getItem("player"));
+    if (!player) window.location.href = "../index.html";
+
+    const missionSlug = "memoria";
+    const MIN_SCORE = 7;
+
+    let gameSequence = [];
+    let playerSequence = [];
+    let level = 0;
+    let isPlayingSequence = false;
+    let isSaving = false;
+
+    const sectors = document.querySelectorAll('.sector');
+    const statusMsg = document.getElementById('status-msg');
+
+    function startGame() {
+        document.getElementById('modal-start').classList.add('hidden');
+        gameSequence = [];
+        level = 0;
+        nextLevel();
+    }
+
+    function nextLevel() {
+        playerSequence = [];
+        level++;
+        document.getElementById('level-txt').innerText = level;
+        gameSequence.push(Math.floor(Math.random() * 4));
+        playSequence();
+    }
+
+    async function playSequence() {
+        isPlayingSequence = true;
+        disableInput();
+        statusMsg.innerText = "Observe a Sequência...";
+        statusMsg.style.color = "var(--blue)";
+
+        for (let i = 0; i < gameSequence.length; i++) {
+            await wait(600);
+            flashSector(gameSequence[i]);
+            await wait(400);
+        }
+
+        statusMsg.innerText = "Sua Vez! Repita a Ordem";
+        statusMsg.style.color = "var(--green)";
+        isPlayingSequence = false;
+        enableInput();
+    }
+
+    function flashSector(index) {
+        sectors[index].classList.add('active');
+        setTimeout(() => sectors[index].classList.remove('active'), 300);
+    }
+
+    function handleInput(index) {
+        if (isPlayingSequence || isSaving) return;
+
+        flashSector(index);
+        playerSequence.push(index);
+        const currentStep = playerSequence.length - 1;
+
+        if (playerSequence[currentStep] !== gameSequence[currentStep]) {
+            endGame();
+            return;
+        }
+
+        if (playerSequence.length === gameSequence.length) {
+            disableInput();
+            setTimeout(nextLevel, 1000);
+        }
+    }
+
+    sectors.forEach((s, idx) => {
+        s.addEventListener('click', () => handleInput(idx));
+        s.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(idx); });
+    });
+
+    function enableInput() { sectors.forEach(s => s.style.pointerEvents = "auto"); }
+    function disableInput() { sectors.forEach(s => s.style.pointerEvents = "none"); }
+    function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    /* LÓGICA DE PERSISTÊNCIA */
+    async function endGame() {
+        if (isSaving) return;
+        isSaving = true;
+        disableInput();
+        
+        statusMsg.innerText = "ERRO DE MEMÓRIA!";
+        statusMsg.style.color = "var(--red)";
+
+        document.getElementById('modal-end').classList.remove('hidden');
+        const rewardStatus = document.getElementById('reward-status');
+        rewardStatus.innerHTML = "Verificando dados...";
+
+        const finalScore = level - 1;
+
+        try {
+            // 1. GESTÃO DO SCORE (Recorde)
+            const { data: scoresList } = await client.from("mission_scores").select("*").eq("player_id", player.id).eq("mission_slug", missionSlug);
+            let melhorRecorde = finalScore;
+            let jaExistiaScore = scoresList && scoresList.length > 0;
+
+            if (jaExistiaScore) {
+                melhorRecorde = scoresList.reduce((max, item) => item.score > max ? item.score : max, 0);
+            }
+
+            if (!jaExistiaScore) {
+                await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: finalScore }]);
+            } else if (finalScore > melhorRecorde) {
+                await client.from("mission_scores").update({ score: finalScore }).eq("player_id", player.id).eq("mission_slug", missionSlug);
+                melhorRecorde = finalScore;
+            }
+
+            let htmlRes = `<div style="font-size:18px;">Sequência Máxima: <b>${finalScore}</b></div>`;
+            if (finalScore >= melhorRecorde && finalScore > 0) htmlRes += `<p style="color:var(--green); font-size:12px;">⚡ Novo Recorde Operacional!</p>`;
+
+            // 2. GESTÃO DA RECOMPENSA (Meta 7)
+            const { data: rewardsList } = await client.from("mission_rewards").select("*").eq("player_id", player.id).eq("mission_slug", missionSlug);
+
+            if (rewardsList && rewardsList.length > 0) {
+                htmlRes += `<p style="color:var(--muted); font-size:13px; margin-top:5px;">Você já garantiu este pacote.</p>`;
+            } else if (melhorRecorde >= MIN_SCORE) {
+                await client.from("mission_rewards").insert([{ player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false }]);
+                htmlRes += `<p style="color:var(--green); font-weight:700; margin-top:8px;">🎁 Sincronia Perfeita! Pacote Liberado!</p>`;
+                document.getElementById('end-icon').innerText = "🏆";
+                document.getElementById('end-title').innerText = "Mestre Operacional!";
+            } else {
+                htmlRes += `<p style="color:var(--red); font-size:13px; margin-top:8px;">Meta de ${MIN_SCORE} acertos não atingida.</p>`;
+            }
+
+            rewardStatus.innerHTML = htmlRes;
+            await fetchLeaderboard();
+
+        } catch (err) {
+            console.error(err);
+            rewardStatus.innerText = "Erro ao conectar ao banco de dados.";
+        }
+    }
+
+    async function fetchLeaderboard() {
+        const rankingBody = document.getElementById('ranking-body');
+        const { data: leaderboard, error } = await client
+            .from("mission_scores")
+            .select(`score, player_id, players!mission_scores_player_id_fkey (name, emoji, turma_area)`)
+            .eq("mission_slug", missionSlug)
+            .order("score", { ascending: false })
+            .limit(10);
+
+        if (error || !leaderboard) {
+            rankingBody.innerHTML = "<div style='color:var(--muted)'>Ranking indisponível</div>";
+            return;
+        }
+
+        rankingBody.innerHTML = "";
+        leaderboard.forEach((row, i) => {
+            const p = row.players;
+            const isMe = row.player_id === player.id;
+            rankingBody.innerHTML += `
+                <div class="rank-card" style="${isMe ? 'background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.2);' : ''}">
+                    <div class="rank-pos pos-${i+1}">#${i+1}</div>
+                    <div class="rank-info">
+                        <div class="rank-name" style="${isMe ? 'color:var(--green);' : ''}">${p.emoji} ${p.name}</div>
+                        <div class="rank-turma">${p.turma_area || 'Geral'}</div>
+                    </div>
+                    <div class="rank-score">${row.score}</div>
+                </div>`;
+        });
+    }
+</script>
+</body>
+</html>

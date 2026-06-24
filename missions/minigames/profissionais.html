@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conexão Profissional - Minijogo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%; max-width: 430px; height: 92vh; position: relative;
+            background: rgba(15, 23, 42, 0.6); border-radius: 24px; border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px); overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .hud-header { padding: 15px; background: var(--card); border-bottom: 1px solid rgba(255, 255, 255, .08); z-index: 10; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-box { background: rgba(255, 255, 255, .05); border-radius: 14px; padding: 8px; text-align: center; }
+        .stat-box span { display: block; font-size: 18px; font-weight: 700; }
+        .stat-box small { color: var(--muted); font-size: 11px; }
+
+        #combo-banner {
+            background: rgba(250, 204, 21, 0.1); border: 1px solid rgba(250, 204, 21, 0.2);
+            border-radius: 12px; margin-top: 8px; padding: 4px; text-align: center;
+            font-weight: 600; color: var(--yellow); font-size: 12px; transition: all 0.2s ease;
+        }
+
+        #game-space { flex: 1; position: relative; width: 100%; background: rgba(255,255,255,0.01); }
+
+        .professions-grid {
+            position: absolute; bottom: 15px; left: 10px; right: 10px;
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; z-index: 10;
+        }
+
+        .drop-zone {
+            height: 90px; background: rgba(255, 255, 255, 0.04); border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .drop-zone.active { transform: scale(1.04); background: rgba(37, 99, 235, 0.2); border-color: var(--blue); }
+        .drop-zone span { font-size: 28px; }
+        .drop-zone small { font-size: 10px; color: var(--muted); font-weight: 600; text-align: center; }
+
+        .draggable-item {
+            position: absolute; width: 64px; height: 64px; background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 34px;
+            cursor: grab; z-index: 100; touch-action: none; box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+
+        .screen-overlay { position: absolute; inset: 0; background: rgba(7, 17, 31, 0.96); display: flex; justify-content: center; align-items: center; padding: 24px; z-index: 200; text-align: center; }
+        .screen-content { width: 100%; background: var(--bg-light); border-radius: 24px; padding: 24px; border: 1px solid rgba(255, 255, 255, .08); max-height: 85vh; overflow-y: auto; }
+        button { width: 100%; border: none; border-radius: 16px; padding: 14px; cursor: pointer; color: white; font-weight: 600; background: linear-gradient(180deg, #3b82f6, #2563eb); margin-top: 10px; }
+        
+        /* NOVO RANKING ESTILIZADO PADRÃO */
+        .ranking-container { width: 100%; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .rank-card {
+            background: rgba(255, 255, 255, 0.05); border-radius: 18px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05);
+            text-align: left;
+        }
+        .rank-pos { font-weight: 800; font-size: 18px; width: 30px; color: var(--muted); font-family: monospace; }
+        .rank-pos.pos-1 { color: #facc15; }
+        .rank-pos.pos-2 { color: #e2e8f0; }
+        .rank-pos.pos-3 { color: #cd7f32; }
+
+        .rank-info { flex: 1; }
+        .rank-name { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .rank-turma { font-size: 10px; color: var(--muted); font-weight: 500; }
+        .rank-score { font-weight: 800; font-size: 18px; color: var(--blue); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div class="hud-header">
+        <div class="stats-grid">
+            <div class="stat-box"><small>PONTOS</small><span id="score-txt" style="color: var(--green);">0</span></div>
+            <div class="stat-box"><small>COMBO</small><span id="combo-txt" style="color: var(--yellow);">x1</span></div>
+            <div class="stat-box"><small>TEMPO</small><span id="time-txt" style="color: #ef4444;">60s</span></div>
+        </div>
+        <div id="combo-banner">CONECTE OS ITENS PROFISSIONAIS!</div>
+    </div>
+
+    <div id="game-space">
+        <div class="professions-grid">
+            <div class="drop-zone" data-profession="ti"><span>💻</span><small>INFORMÁTICA</small></div>
+            <div class="drop-zone" data-profession="multimidia"><span>🎥</span><small>COMUNICAÇÃO</small></div>
+            <div class="drop-zone" data-profession="gestao"><span>📈</span><small>ADMINISTRAÇÃO</small></div>
+            <div class="drop-zone" data-profession="barbearia"><span>✂️</span><small>BARBEARIA</small></div>
+        </div>
+    </div>
+
+    <div id="modal-start" class="screen-overlay">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">🔧</div>
+            <h2>Instrumentos de Trabalho</h2>
+            <p>Toda profissão possui instrumentos de trabalho. Os itens vão surgir em um ritmo frenético! Seja o mais rápido que puder para arrastar cada um para sua respectiva área.</p>
+            <p>🔥 <b>Acertos consecutivos</b> aumentam muito seu Combo! Qualquer erro ou deixar acumular zera tudo.</p>
+            <p><strong>Meta Mínima:</strong> <span style="color:var(--yellow); font-weight: 700;">500 pontos</span></p>
+            <button onclick="startGame()">Começar Corrida</button>
+        </div>
+    </div>
+
+    <div id="modal-end" class="screen-overlay hidden">
+        <div class="screen-content">
+            <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
+            <h2>Fim de Jogo!</h2>
+            <div id="reward-status" style="background: rgba(255,255,255,0.04); padding:15px; border-radius:16px; margin: 15px 0; border: 1px dashed rgba(255,255,255,0.1);;">Verificando resultados...</div>
+            
+            <h3 style="text-align: left; font-size: 13px; color: var(--muted); margin-top: 15px; text-transform: uppercase;">📊 Líderes Operacionais</h3>
+            <div class="ranking-container" id="ranking-body"></div>
+            
+            <button onclick="location.reload()">Reiniciar Jogo</button>
+            <button onclick="goAlbum()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15)">Voltar ao Álbum</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
+<script src="../menu/menu.js"></script>
+
+<script>
+    const player = JSON.parse(localStorage.getItem("player"));
+    if (!player) window.location.href = "../index.html";
+
+    const missionSlug = "conexao"; 
+    const MIN_SCORE = 500;
+
+    const itemsPool = [
+        { emoji: '💻', prof: 'ti' }, { emoji: '💾', prof: 'ti' }, { emoji: '⌨️', prof: 'ti' },
+        { emoji: '📷', prof: 'multimidia' }, { emoji: '🎙️', prof: 'multimidia' }, { emoji: '🎬', prof: 'multimidia' },
+        { emoji: '💼', prof: 'gestao' }, { emoji: '📊', prof: 'gestao' }, { emoji: '🗓️', prof: 'gestao' },
+        { emoji: '💈', prof: 'barbearia' }, { emoji: '🪮', prof: 'barbearia' }, { emoji: '🧴', prof: 'barbearia' }
+    ];
+
+    let score = 0;
+    let combo = 1;
+    let timeLeft = 60;
+    let gameActive = false;
+    let spawnSpeed = 900; 
+    let isSaving = false; 
+    
+    let spawnInterval;
+    let timerInterval;
+
+    function startGame() {
+        document.getElementById('modal-start').classList.add('hidden');
+        gameActive = true;
+        isSaving = false;
+        
+        spawnItem();
+        spawnInterval = setInterval(spawnItem, spawnSpeed);
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function spawnItem() {
+        if (!gameActive) return;
+
+        const randItem = itemsPool[Math.floor(Math.random() * itemsPool.length)];
+        
+        const itemEl = document.createElement('div');
+        itemEl.className = 'draggable-item';
+        itemEl.innerText = randItem.emoji;
+        itemEl.dataset.prof = randItem.prof;
+        
+        itemEl.style.top = (Math.random() * 100 + 40) + 'px';
+        itemEl.style.left = (Math.random() * (document.getElementById('game-space').offsetWidth - 75)) + 'px';
+        
+        document.getElementById('game-space').appendChild(itemEl);
+        initDrag(itemEl);
+    }
+
+    function initDrag(el) {
+        let offsetX, offsetY;
+
+        const move = (e) => {
+            if (!gameActive) return;
+            const touch = e.touches ? e.touches[0] : e;
+            
+            el.style.left = (touch.clientX - offsetX) + 'px';
+            el.style.top = (touch.clientY - offsetY) + 'px';
+
+            const zones = document.querySelectorAll('.drop-zone');
+            zones.forEach(z => {
+                const r = z.getBoundingClientRect();
+                if(touch.clientX > r.left && touch.clientX < r.right && touch.clientY > r.top && touch.clientY < r.bottom) {
+                    z.classList.add('active');
+                } else {
+                    z.classList.remove('active');
+                }
+            });
+        };
+
+        const stop = (e) => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('touchmove', move);
+            document.removeEventListener('mouseup', stop);
+            document.removeEventListener('touchend', stop);
+
+            if (!gameActive) return;
+
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+            const zones = document.querySelectorAll('.drop-zone');
+            let droppedInZone = false;
+
+            zones.forEach(z => {
+                const r = z.getBoundingClientRect();
+                if(touch.clientX > r.left && touch.clientX < r.right && touch.clientY > r.top && touch.clientY < r.bottom) {
+                    droppedInZone = true;
+                    
+                    if(z.dataset.profession === el.dataset.prof) {
+                        score += 25 * combo;
+                        combo++;
+                        document.getElementById('combo-banner').innerText = `🔥 EXCELENTE COMBO: x${combo}`;
+                        document.getElementById('combo-banner').style.color = "var(--green)";
+                    } else {
+                        score = Math.max(0, score - 20);
+                        combo = 1;
+                        document.getElementById('combo-banner').innerText = `💥 ÁREA INCORRETA! COMBO RESETADO`;
+                        document.getElementById('combo-banner').style.color = "#ef4444";
+                    }
+                }
+                z.classList.remove('active');
+            });
+
+            if(droppedInZone) {
+                el.remove();
+                document.getElementById('score-txt').innerText = score;
+                document.getElementById('combo-txt').innerText = `x${combo}`;
+            } else {
+                el.style.transition = "all 0.25s ease";
+                el.style.top = "60px";
+                setTimeout(() => el.style.transition = "none", 250);
+            }
+        };
+
+        el.addEventListener('mousedown', (e) => {
+            offsetX = e.clientX - el.offsetLeft;
+            offsetY = e.clientY - el.offsetTop;
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', stop);
+        });
+
+        el.addEventListener('touchstart', (e) => {
+            offsetX = e.touches[0].clientX - el.offsetLeft;
+            offsetY = e.touches[0].clientY - el.offsetTop;
+            document.addEventListener('touchmove', move, {passive: false});
+            document.addEventListener('touchend', stop);
+        });
+    }
+
+    function updateTimer() {
+        timeLeft--;
+        document.getElementById('time-txt').innerText = timeLeft + 's';
+        if(timeLeft <= 0) endGame();
+    }
+
+    async function endGame() {
+        if (isSaving) return; 
+        isSaving = true;
+        gameActive = false;
+        
+        clearInterval(spawnInterval);
+        clearInterval(timerInterval);
+        
+        document.querySelectorAll('.draggable-item').forEach(item => item.remove());
+        document.getElementById('modal-end').classList.remove('hidden');
+        
+        const rewardStatus = document.getElementById('reward-status');
+        rewardStatus.innerHTML = "Verificando recordes...";
+
+        try {
+            const { data: scoresList } = await client
+                .from("mission_scores")
+                .select("*")
+                .eq("player_id", player.id)
+                .eq("mission_slug", missionSlug);
+
+            let melhorScoreAntigo = 0;
+            let jaExistiaScore = scoresList && scoresList.length > 0;
+
+            if (jaExistiaScore) {
+                melhorScoreAntigo = scoresList.reduce((max, item) => item.score > max ? item.score : max, 0);
+            }
+
+            if (!jaExistiaScore) {
+                await client.from("mission_scores").insert([
+                    { player_id: player.id, mission_slug: missionSlug, score: score }
+                ]);
+            } else if (score > melhorScoreAntigo) {
+                await client
+                    .from("mission_scores")
+                    .update({ score: score })
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+            }
+
+            let htmlResultado = `<div style="font-size:18px; margin-bottom:10px;">Sua Pontuação: <b>${score}</b></div>`;
+            if (jaExistiaScore && score > melhorScoreAntigo) {
+                htmlResultado += `<p style="color:var(--green); font-size:12px; margin-bottom:10px;">⚡ Novo Recorde Pessoal!</p>`;
+            }
+
+            const { data: rewardsList } = await client
+                .from("mission_rewards")
+                .select("*")
+                .eq("player_id", player.id)
+                .eq("mission_slug", missionSlug);
+
+            let jaGarantiuPremio = rewardsList && rewardsList.length > 0;
+
+            if (jaGarantiuPremio) {
+                htmlResultado += `<p style="color: var(--muted); font-size:13px;">Você já garantiu seu pacote nesta missão.</p>`;
+            } else if (score >= MIN_SCORE || melhorScoreAntigo >= MIN_SCORE) {
+                await client.from("mission_rewards").insert([
+                    {
+                        player_id: player.id,
+                        mission_slug: missionSlug,
+                        reward_type: "pack",
+                        reward_value: 1,
+                        unlocked: true,
+                        claimed: false
+                    }
+                ]);
+                htmlResultado += `<p style="color:#22c55e; font-weight:700; font-size:13px;">🎁 Incrível! Pacote Adicional Liberado com Sucesso!</p>`;
+            } else {
+                htmlResultado += `<p style="color:#ef4444; font-size:13px;">Meta mínima não atingida (${MIN_SCORE} pts). Tente de novo!</p>`;
+            }
+
+            rewardStatus.innerHTML = htmlResultado;
+            await fetchLeaderboard();
+
+        } catch (err) {
+            console.error(err);
+            rewardStatus.innerText = "Erro ao conectar ao banco de dados.";
+        }
+    }
+
+    async function fetchLeaderboard() {
+        const rankingBody = document.getElementById('ranking-body');
+        
+        const { data: leaderboard, error } = await client
+            .from("mission_scores")
+            .select(`
+                score,
+                player_id,
+                players!mission_scores_player_id_fkey (
+                    name,
+                    emoji,
+                    turma_area
+                )
+            `)
+            .eq("mission_slug", missionSlug)
+            .order("score", { ascending: false })
+            .limit(10);
+
+        if (error || !leaderboard) {
+            rankingBody.innerHTML = "<div style='color:var(--muted)'>Ranking indisponível</div>";
+            return;
+        }
+
+        rankingBody.innerHTML = "";
+        
+        leaderboard.forEach((row, index) => {
+            const posicao = index + 1;
+            const playerData = row.players;
+            
+            let nomeExibicao = "Jogador";
+            let emojiExibicao = "💼";
+            let turmaExibicao = "Geral";
+
+            if (playerData) {
+                nomeExibicao = playerData.name;
+                emojiExibicao = playerData.emoji || "💼";
+                turmaExibicao = playerData.turma_area || "Sem Turma";
+            }
+
+            const eVoce = row.player_id === player.id;
+
+            rankingBody.innerHTML += `
+                <div class="rank-card" style="${eVoce ? 'background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.2);' : ''}">
+                    <div class="rank-pos pos-${posicao}">#${posicao}</div>
+                    <div class="rank-info">
+                        <div class="rank-name" style="${eVoce ? 'color:var(--green);' : ''}">${emojiExibicao} ${nomeExibicao}</div>
+                        <div class="rank-turma">${turmaExibicao}</div>
+                    </div>
+                    <div class="rank-score">${row.score}</div>
+                </div>`;
+        });
+    }
+</script>
+</body>
+</html>
