@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sustentabilidade - Copa</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
     <style>
         :root {
             --bg-dark: #07111f;
@@ -43,7 +44,6 @@
             padding: 10px;
         }
 
-        /* Container do Jogo limitando tamanho de tela mobile */
         #game-wrapper {
             width: 100%;
             max-width: 430px;
@@ -58,7 +58,6 @@
             flex-direction: column;
         }
 
-        /* Top HUD baseado no seu estilo .player e .card */
         .hud-header {
             padding: 15px;
             background: var(--card);
@@ -90,7 +89,6 @@
             font-size: 11px;
         }
 
-        /* Alvo em Evidência */
         #target-banner {
             background: rgba(37, 99, 235, 0.2);
             border: 1px solid rgba(37, 99, 235, 0.4);
@@ -111,7 +109,6 @@
             letter-spacing: 2px;
         }
 
-        /* Área de queda dos itens */
         #game-space {
             flex: 1;
             position: relative;
@@ -119,43 +116,32 @@
             overflow: hidden;
         }
 
-        /* Estilo dos Emojis Caindo */
         .falling-emoji {
             position: absolute;
             font-size: 38px;
             cursor: pointer;
-
-            /* 🔥 HITBOX MAIOR */
             width: 70px;
             height: 70px;
-
             display: flex;
             justify-content: center;
             align-items: center;
-
             z-index: 5;
             animation: spawnPop 0.15s ease-out;
-
             touch-action: manipulation;
         }
+
         .falling-emoji::before {
-    content: "";
-    position: absolute;
-    width: 90px;
-    height: 90px;
-}
-
-        @keyframes spawnPop {
-            0% {
-                transform: scale(0.5);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            content: "";
+            position: absolute;
+            width: 90px;
+            height: 90px;
         }
 
-        /* Telas de Interface (Modais) baseadas nas suas classes */
+        @keyframes spawnPop {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
         .screen-overlay {
             position: absolute;
             inset: 0;
@@ -174,6 +160,8 @@
             border-radius: 24px;
             padding: 24px;
             border: 1px solid rgba(255, 255, 255, .08);
+            max-height: 85vh;
+            overflow-y: auto;
         }
 
         .screen-content h2 {
@@ -199,6 +187,7 @@
             font-family: 'Poppins', sans-serif;
             font-size: 16px;
             background: linear-gradient(180deg, #3b82f6, #2563eb);
+            margin-top: 10px;
             transition: transform 0.2s;
         }
 
@@ -206,18 +195,22 @@
             transform: translateY(-2px);
         }
 
-        .big-code {
-            text-align: center;
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            color: var(--yellow);
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 16px;
-            margin: 15px 0;
-            border: 1px dashed rgba(250, 204, 21, 0.4);
+        /* NOVO CONTAINER DE RANKING PADRONIZADO */
+        .ranking-container { width: 100%; margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .rank-card {
+            background: rgba(255, 255, 255, 0.05); border-radius: 18px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 15px; border: 1px solid rgba(255,255,255,0.05);
+            text-align: left;
         }
+        .rank-pos { font-weight: 800; font-size: 18px; width: 30px; color: var(--muted); font-family: monospace; }
+        .rank-pos.pos-1 { color: #facc15; }
+        .rank-pos.pos-2 { color: #e2e8f0; }
+        .rank-pos.pos-3 { color: #cd7f32; }
+
+        .rank-info { flex: 1; }
+        .rank-name { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+        .rank-turma { font-size: 10px; color: var(--muted); font-weight: 500; }
+        .rank-score { font-weight: 800; font-size: 18px; color: var(--blue); }
 
         .hidden {
             display: none !important;
@@ -260,7 +253,7 @@
                     tudo em 3 turnos frenéticos de 15s.</p>
                 <p><strong>Atenção:</strong> Toque APENAS nos tipos em evidência. Erros tiram pontos e o lixo vai cair
                     cada vez mais rápido!</p>
-                    <p><strong>Meta mínima:</strong> <span id="min-score-text">200</span> pontos</p>
+                <p><strong>Meta mínima:</strong> <span id="min-score-text">200</span> pontos</p>
                 <button onclick="startRound()">Iniciar Turno 1</button>
             </div>
         </div>
@@ -278,37 +271,33 @@
             <div class="screen-content">
                 <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
                 <h2>Estádio Impecável!</h2>
-                <p>Seu trabalho nos bastidores garantiu a pontuação mínima! Resgate seu pacote de figurinhas com o
-                    código abaixo:</p>
-                <div class="big-code" id="reward-code">------</div>
-                <button onclick="restartGame()">Jogar Novamente</button>
+                <div id="reward-status" style="background: rgba(255,255,255,0.04); padding:15px; border-radius:16px; margin: 15px 0; border: 1px dashed rgba(255,255,255,0.1);">Verificando resultados...</div>
+                
+                <h3 style="text-align: left; font-size: 13px; color: var(--muted); margin-top: 15px; text-transform: uppercase;">📊 Líderes Verdes</h3>
+                <div class="ranking-container" id="ranking-body"></div>
+
+                <button onclick="restartGame()">Reiniciar Jogo</button>
+                <button onclick="goAlbum()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15)">Voltar ao Álbum</button>
             </div>
         </div>
     </div>
  
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../config.js"></script>
 <script src="../menu/menu.js"></script>
 
 <script>
-
-    
 const MIN_SCORE = 200;
 document.getElementById("min-score-text").innerText = MIN_SCORE;
 
 const player = JSON.parse(localStorage.getItem("player"));
-
 if (!player) {
     window.location.href = "../index.html";
 }
 
 const urlParams = new URLSearchParams(window.location.search);
 const missionSlug = urlParams.get("mission") || "coleta";
-
-/* =========================
-   ELEMENTOS
-========================= */
 
 const gameSpace = document.getElementById('game-space');
 const scoreTxt = document.getElementById('score-txt');
@@ -324,16 +313,13 @@ const modalRest = document.getElementById('modal-rest');
 const modalEnd = document.getElementById('modal-end');
 
 const restTimerTxt = document.getElementById('rest-timer');
-const rewardCodeTxt = document.getElementById('reward-code');
-
-/* =========================
-   ESTADO
-========================= */
+const rewardStatus = document.getElementById('reward-status');
 
 let score = 0;
 let currentRound = 0;
 let roundTimeLeft = 15;
 let gameActive = false;
+let isSaving = false;
 
 let loopFisica;
 let loopCronometro;
@@ -345,10 +331,6 @@ let categoriaAlvo = null;
 let spawnSpeed = 600;
 let fallSpeed = 3.5;
 
-/* =========================
-   CATEGORIAS
-========================= */
-
 const categorias = [
     { nome: 'PAPEL', emojis: ['📄', '🧻', '📦', '📰'], cor: 'rgba(37, 99, 235, 0.2)', borda: 'rgba(37, 99, 235, 0.5)' },
     { nome: 'PLÁSTICO', emojis: ['🥤', '🍼', '🛍️', '🪣'], cor: 'rgba(239, 68, 68, 0.2)', borda: 'rgba(239, 68, 68, 0.5)' },
@@ -357,30 +339,18 @@ const categorias = [
     { nome: 'ELETRONICO', emojis: ['💻', '📱', '🔋', '🔌'], cor: 'rgba(148, 163, 184, 0.2)', borda: 'rgba(148, 163, 184, 0.5)' }
 ];
 
-/* =========================
-   INICIO
-========================= */
-
-init();
-
-function init() {
-    modalStart.classList.remove('hidden');
-}
-
-/* =========================
-   GAME LOOP
-========================= */
+modalStart.classList.remove('hidden');
 
 function startRound() {
     currentRound++;
     gameActive = true;
+    isSaving = false;
 
     modalStart.classList.add('hidden');
     modalRest.classList.add('hidden');
     modalEnd.classList.add('hidden');
 
     roundTimeLeft = 15;
-
     roundTxt.innerText = `${currentRound}/3`;
     timeTxt.innerText = `${roundTimeLeft}s`;
 
@@ -402,10 +372,6 @@ function startRound() {
 
     spawnManager();
 }
-
-/* =========================
-   SPAWN / CLICK
-========================= */
 
 function spawnManager() {
     if (!gameActive) return;
@@ -429,7 +395,6 @@ function spawnManager() {
     });
 
     gameSpace.appendChild(el);
-
     timeoutSpawn = setTimeout(spawnManager, spawnSpeed);
 }
 
@@ -448,10 +413,6 @@ function clickItem(el) {
     el.remove();
 }
 
-/* =========================
-   PHYSICS
-========================= */
-
 function updatePhysics() {
     const itens = document.querySelectorAll('.falling-emoji');
     const altura = gameSpace.offsetHeight;
@@ -459,14 +420,9 @@ function updatePhysics() {
     itens.forEach(item => {
         let top = parseFloat(item.style.top);
         item.style.top = `${top + fallSpeed}px`;
-
         if (top > altura) item.remove();
     });
 }
-
-/* =========================
-   TIMER
-========================= */
 
 function updateTimer() {
     roundTimeLeft--;
@@ -486,10 +442,6 @@ function clearTurn() {
     gameSpace.innerHTML = '';
 }
 
-/* =========================
-   REST
-========================= */
-
 function showRest() {
     let t = 5;
     modalRest.classList.remove('hidden');
@@ -506,103 +458,134 @@ function showRest() {
     }, 1000);
 }
 
-/* =========================
-   FINAL + REWARD SYSTEM
-========================= */
-
 async function finishGame() {
+    if (isSaving) return;
+    isSaving = true;
 
     modalEnd.classList.remove('hidden');
+    rewardStatus.innerText = "Verificando recordes...";
 
-    rewardCodeTxt.innerText = "VERIFICANDO...";
-
-    // salva melhor score
-    const { data: existingScore } = await client
-        .from("mission_scores")
-        .select("*")
-        .eq("player_id", player.id)
-        .eq("mission_slug", missionSlug)
-        .maybeSingle();
-
-    if (!existingScore) {
-        await client.from("mission_scores").insert([{
-            player_id: player.id,
-            mission_slug: missionSlug,
-            score: score
-        }]);
-    } else if (score > existingScore.score) {
-        await client
+    try {
+        const { data: existingScore } = await client
             .from("mission_scores")
-            .update({ score })
-            .eq("id", existingScore.id);
+            .select("*")
+            .eq("player_id", player.id)
+            .eq("mission_slug", missionSlug)
+            .maybeSingle();
+
+        let melhorScoreAntigo = 0;
+        if (existingScore) {
+            melhorScoreAntigo = existingScore.score;
+        }
+
+        if (!existingScore) {
+            await client.from("mission_scores").insert([{
+                player_id: player.id,
+                mission_slug: missionSlug,
+                score: score
+            }]);
+        } else if (score > existingScore.score) {
+            await client
+                .from("mission_scores")
+                .update({ score })
+                .eq("id", existingScore.id);
+        }
+
+        let htmlResultado = `<div style="font-size:18px; margin-bottom:10px;">Sua Pontuação: <b>${score}</b></div>`;
+        if (existingScore && score > melhorScoreAntigo) {
+            htmlResultado += `<p style="color:var(--green); font-size:12px; margin-bottom:10px;">⚡ Novo Recorde Pessoal!</p>`;
+        }
+
+        const { data: existingReward } = await client
+            .from("mission_rewards")
+            .select("*")
+            .eq("player_id", player.id)
+            .eq("mission_slug", missionSlug)
+            .maybeSingle();
+
+        if (existingReward) {
+            htmlResultado += `<p style="color: var(--muted); font-size:13px;">Você já garantiu seu pacote nesta missão.</p>`;
+        } else if (score >= MIN_SCORE || melhorScoreAntigo >= MIN_SCORE) {
+            await client.from("mission_rewards").insert([{
+                player_id: player.id,
+                mission_slug: missionSlug,
+                reward_type: "pack",
+                reward_value: 1,
+                unlocked: true,
+                claimed: false
+            }]);
+            htmlResultado += `<p style="color:#22c55e; font-weight:700; font-size:13px;">🎁 Incrível! Pacote Adicional Liberado com Sucesso!</p>`;
+        } else {
+            htmlResultado += `<p style="color:#ef4444; font-size:13px;">Meta mínima não atingida (${MIN_SCORE} pts). Tente de novo!</p>`;
+        }
+
+        rewardStatus.innerHTML = htmlResultado;
+        await fetchLeaderboard();
+
+    } catch (err) {
+        console.error(err);
+        rewardStatus.innerText = "Erro ao conectar ao banco de dados.";
     }
-
-    // mostra score final
-    rewardCodeTxt.innerHTML = `
-        <div style="font-size:18px; margin-bottom:10px;">
-            Sua pontuação: <b>${score}</b>
-        </div>
-    `;
-
-    // verifica reward existente
-    const { data: existingReward } = await client
-        .from("mission_rewards")
-        .select("*")
-        .eq("player_id", player.id)
-        .eq("mission_slug", missionSlug)
-        .maybeSingle();
-
-    if (existingReward) {
-        rewardCodeTxt.innerHTML += `
-            <p>Você já resgatou essa missão.</p>
-            <button onclick="goPacks()">Ir para Pacotes</button>
-        `;
-        return;
-    }
-
-    // valida score corretamente
-    if (score < MIN_SCORE) {
-        rewardCodeTxt.innerHTML += `
-            <p style="color:#ef4444;">
-                Pontuação mínima não atingida (${MIN_SCORE})
-            </p>
-            <button onclick="goToPacks()">Voltar</button>
-        `;
-        return;
-    }
-
-    // cria reward
-    const { error } = await client
-        .from("mission_rewards")
-        .insert([{
-            player_id: player.id,
-            mission_slug: missionSlug,
-            reward_type: "pack",
-            reward_value: 1,
-            unlocked: true,
-            claimed: false
-        }]);
-
-    if (error) {
-        console.log(error);
-        rewardCodeTxt.innerText = "Erro ao gerar recompensa";
-        return;
-    }
-
-    rewardCodeTxt.innerHTML += `
-        <p style="color:#22c55e;">🎁 Pacote liberado!</p>
-        <button onclick="goToPacks()">Ir para Pacotes</button>
-    `;
 }
-/* =========================
-   RESTART
-========================= */
+
+async function fetchLeaderboard() {
+    const rankingBody = document.getElementById('ranking-body');
+    
+    const { data: leaderboard, error } = await client
+        .from("mission_scores")
+        .select(`
+            score,
+            player_id,
+            players!mission_scores_player_id_fkey (
+                name,
+                emoji,
+                turma_area
+            )
+        `)
+        .eq("mission_slug", missionSlug)
+        .order("score", { ascending: false })
+        .limit(10);
+
+    if (error || !leaderboard) {
+        rankingBody.innerHTML = "<div style='color:var(--muted)'>Ranking indisponível</div>";
+        return;
+    }
+
+    rankingBody.innerHTML = "";
+    
+    leaderboard.forEach((row, index) => {
+        const posicao = index + 1;
+        const playerData = row.players;
+        
+        let nomeExibicao = "Jogador";
+        let emojiExibicao = "🗑️";
+        let turmaExibicao = "Geral";
+
+        if (playerData) {
+            nomeExibicao = playerData.name;
+            emojiExibicao = playerData.emoji || "🗑️";
+            turmaExibicao = playerData.turma_area || "Sem Turma";
+        }
+
+        const eVoce = row.player_id === player.id;
+
+        rankingBody.innerHTML += `
+            <div class="rank-card" style="${eVoce ? 'background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.2);' : ''}">
+                <div class="rank-pos pos-${posicao}">#${posicao}</div>
+                <div class="rank-info">
+                    <div class="rank-name" style="${eVoce ? 'color:var(--green);' : ''}">${emojiExibicao} ${nomeExibicao}</div>
+                    <div class="rank-turma">${turmaExibicao}</div>
+                </div>
+                <div class="rank-score">${row.score}</div>
+            </div>`;
+    });
+}
 
 function restartGame() {
     score = 0;
     currentRound = 0;
     scoreTxt.innerText = 0;
-
+    scoreTxt.style.color = 'var(--green)';
     modalEnd.classList.add('hidden');
     modalStart.classList.remove('hidden');
 }

@@ -31,12 +31,13 @@
             </div>
         </div>
 
-                <!-- terça -->
+        <!-- terça -->
         <div class="mission-day">
             <h2>Terça-feira</h2>
 
             <div class="mission-card">
-                <h3>Missão de Coleta</h3>
+                <h3>Missão de Coleta ♻️</h3>
+                <p>Tipo: Agilidade</p>
                 <p>Complete o desafio e desbloqueie sua recompensa</p>
 
                 <!-- 🔥 LINK DA MISSÃO -->
@@ -50,77 +51,101 @@
         <div class="mission-day">
             <h2>Quarta-feira</h2>
 
-            <div class="mission-card locked">
-                <h3>Missão 1</h3>
-                <p>Desafio disponível na quarta</p>
+            <div class="mission-card">
+                <h3>Missão Embaixadinha ⚽</h3>
+                <p>Tipo: Habilidade</p>
+                <p>Complete o desafio e desbloqueie sua recompensa</p>
 
-                <!-- 👇 AQUI VOCÊ SÓ TROCA O LINK DEPOIS -->
-                <button onclick="location.href='SEU_LINK_AQUI.html'">
+                <!-- 🔥 LINK DA MISSÃO -->
+                <button onclick="location.href='../minigames/embaixadinhas.html'">
                     Jogar missão
                 </button>
             </div>
-        </div>
+            <br><br>
+            <div class="mission-card">
+                <h3>Missão Instrumentos de Trabalho 🔧</h3>
+                <p>Tipo: Agilidade</p>
+                <p>Complete o desafio e desbloqueie sua recompensa</p>
 
-        <!-- QUINTA -->
-        <div class="mission-day">
-            <h2>Quinta-feira</h2>
-
-            <div class="mission-card locked">
-                <h3>Missão 1</h3>
-                <p>Desafio disponível na quinta</p>
-                <button disabled>Bloqueado 🔒</button>
+                <!-- 🔥 LINK DA MISSÃO -->
+                <button onclick="location.href='../minigames/profissionais.html'">
+                    Jogar missão
+                </button>
             </div>
-        </div>
+<br><br>
+            <div class="mission-card">
+                <h3>Missão Sincronia 🧠</h3>
+                <p>Tipo: Memória</p>
+                <p>Complete o desafio e desbloqueie sua recompensa</p>
 
-        <!-- SEXTA -->
-        <div class="mission-day">
-            <h2>Sexta-feira</h2>
-
-            <div class="mission-card locked">
-                <h3>Missão Final</h3>
-                <p>Desafio especial da semana</p>
-                <button disabled>Bloqueado 🔒</button>
+                <!-- 🔥 LINK DA MISSÃO -->
+                <button onclick="location.href='../minigames/genius.html'">
+                    Jogar missão
+                </button>
             </div>
-        </div>
+
+
+
+            <!-- QUINTA -->
+            <div class="mission-day">
+                <h2>Quinta-feira</h2>
+
+                <div class="mission-card locked">
+                    <h3>Missão 1</h3>
+                    <p>Desafio disponível na quinta</p>
+                    <button disabled>Bloqueado 🔒</button>
+                </div>
+            </div>
+
+            <!-- SEXTA -->
+            <div class="mission-day">
+                <h2>Sexta-feira</h2>
+
+                <div class="mission-card locked">
+                    <h3>Missão Final</h3>
+                    <p>Desafio especial da semana</p>
+                    <button disabled>Bloqueado 🔒</button>
+                </div>
+            </div>
 
     </main>
 
     <!-- MENU -->
- <nav class="menu-bar">
+    <nav class="menu-bar">
 
-    <button onclick="goAlbum()">
-        <span>📖</span>
-        <small>Álbum</small>
-    </button>
+        <button onclick="goAlbum()">
+            <span>📖</span>
+            <small>Álbum</small>
+        </button>
 
-    <button onclick="goPacks()">
-        <span>📦</span>
-        <small>Pacotes</small>
-    </button>
+        <button onclick="goPacks()">
+            <span>📦</span>
+            <small>Pacotes</small>
+        </button>
 
-    <button onclick="goMissions()">
-        <span>🎯</span>
-        <small>Missões</small>
-    </button>
+        <button onclick="goMissions()">
+            <span>🎯</span>
+            <small>Missões</small>
+        </button>
 
-    <button class="center-btn" onclick="goTrades()">
-        <span>🔁</span>
-        <small>Trocas</small>
-    </button>
+        <button class="center-btn" onclick="goTrades()">
+            <span>🔁</span>
+            <small>Trocas</small>
+        </button>
 
-    <button onclick="goProfile()">
-        <span>👤</span>
-        <small>Perfil</small>
-    </button>
+        <button onclick="goProfile()">
+            <span>👤</span>
+            <small>Perfil</small>
+        </button>
 
-</nav>
+    </nav>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../config.js"></script>
-      <script src="../menu/menu.js"></script>
-    
+    <script src="../menu/menu.js"></script>
+
     <script src="../shared/stats.js"></script>
-    
-    
+
+
 </body>
 
 </html>
