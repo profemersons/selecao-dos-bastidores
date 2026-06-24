@@ -1,0 +1,259 @@
+/* =========================
+RESET & VARIÁVEIS DE TV
+========================= */
+:root {
+    --bg-dark: #060b13;
+    --bg-card: rgba(15, 23, 42, 0.55);
+    --border-glow: rgba(255, 255, 255, 0.08);
+    --green-neon: #22c55e;
+    --yellow-neon: #facc15;
+    --blue-neon: #3b82f6;
+    --silver: #cbd5e1;
+    --bronze: #b45309;
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-dark);
+}
+
+/* BACKGROUND DINÂMICO */
+body {
+    background: 
+        radial-gradient(circle at 10% 10%, rgba(34, 197, 94, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.12), transparent 40%),
+        linear-gradient(135deg, #04080f 0%, #091322 100%);
+}
+
+/* =========================
+HEADER (VISTA DE LONGE)
+========================= */
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 50px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border-glow);
+    backdrop-filter: blur(10px);
+}
+
+.hero h1 {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #fff, var(--text-muted));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    font-size: 16px;
+    color: var(--green-neon);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 2px;
+}
+
+.hero-right { text-align: right; }
+#clock { font-size: 42px; font-weight: 850; color: #fff; }
+#lastUpdate { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+/* INDICADOR DA TELA ATUAL */
+.section-indicator {
+    padding: 15px 0;
+    text-align: center;
+}
+
+#sectionTitle {
+    display: inline-block;
+    padding: 8px 32px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--yellow-neon);
+    letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* =========================
+CONTAINER DA TV
+========================= */
+main {
+    height: calc(100vh - 190px);
+    padding: 10px 40px 30px 40px;
+}
+
+.screen-container {
+    width: 100%;
+    height: 100%;
+}
+
+.ranking-card {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 24px;
+    padding: 30px;
+    backdrop-filter: blur(20px);
+    animation: tvFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tvFadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* =========================
+NATIVE SPLIT LAYOUT (PÓDIO + LISTA JUNTOS)
+========================= */
+.split-layout {
+    display: grid;
+    grid-template-columns: 45% 55%;
+    gap: 30px;
+    height: 100%;
+    align-items: center;
+}
+
+/* PÓDIO MONUMENTAL (ESQUERDA) */
+.podium-side {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 15px;
+    height: 90%;
+    padding-bottom: 20px;
+}
+
+.podium-column {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 20px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.podium-column.first {
+    height: 100%;
+    background: linear-gradient(180deg, rgba(250, 204, 21, 0.15) 0%, rgba(255,255,255,0.02) 100%);
+    border-color: rgba(250, 204, 21, 0.3);
+}
+.podium-column.second { height: 85%; }
+.podium-column.third { height: 75%; }
+
+.podium-badge { font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+.podium-user-emoji { font-size: 32px; margin-bottom: 5px; }
+.podium-name { font-size: 24px; font-weight: 800; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.podium-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 15px; }
+.podium-score { font-size: 28px; font-weight: 900; color: var(--yellow-neon); }
+
+.podium-column.first .podium-score { font-size: 34px; color: #fff; text-shadow: 0 0 12px var(--yellow-neon); }
+
+/* LISTA DA DIREITA (TOP 4 AO 10) */
+.list-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    justify-content: center;
+}
+
+.tv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 12px 24px;
+    border-radius: 14px;
+}
+
+.tv-row-left { display: flex; align-items: center; gap: 15px; }
+.tv-idx { font-size: 18px; font-weight: 800; color: var(--text-muted); width: 30px; }
+.tv-name { font-size: 20px; font-weight: 700; }
+.tv-sub { font-size: 13px; color: var(--text-muted); }
+.tv-val { font-size: 22px; font-weight: 800; color: var(--blue-neon); }
+
+/* =========================
+GRID DE GRUPOS (TURMAS / SETORES)
+========================= */
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.group-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 18px 24px;
+    border-radius: 16px;
+    border-left: 5px solid var(--blue-neon);
+}
+.group-row.top-0 { border-left-color: var(--yellow-neon); background: rgba(250,204,21,0.05); }
+.group-row.top-1 { border-left-color: var(--silver); }
+.group-row.top-2 { border-left-color: var(--bronze); }
+
+.group-name { font-size: 22px; font-weight: 700; }
+.group-val { font-size: 26px; font-weight: 800; color: var(--green-neon); }
+
+/* =========================
+NOVO INSIGHT: TELA DE ESTATÍSTICAS GERAIS
+========================= */
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    height: 100%;
+    align-items: center;
+}
+
+.insight-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.insight-icon { font-size: 60px; margin-bottom: 15px; }
+.insight-val { font-size: 48px; font-weight: 900; color: var(--green-neon); margin-bottom: 10px; }
+.insight-label { font-size: 18px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+/* FOOTER COPA */
+footer {
+    position: fixed;
+    bottom: 0; left: 0; width: 100%;
+    text-align: center; padding: 12px;
+    background: rgba(4, 8, 15, 0.8);
+    font-size: 13px; color: var(--text-muted);
+    letter-spacing: 1px;
+}

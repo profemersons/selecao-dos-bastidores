@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lanchonete do Estádio - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at bottom left, rgba(37, 99, 235, .22), transparent 30%),
+                radial-gradient(circle at bottom center, rgba(250, 204, 21, .15), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(34, 197, 94, .20), transparent 30%),
+                linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%;
+            max-width: 430px;
+            height: 92vh;
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hud-header {
+            padding: 15px;
+            background: var(--card);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            z-index: 10;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, .05);
+            border-radius: 14px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-box small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        #game-space {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .order-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .customer-avatar {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+
+        .order-title {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .order-ingredients {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            font-size: 28px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .kitchen-table {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .current-plate {
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            font-size: 45px;
+            min-height: 120px;
+            justify-content: center;
+        }
+
+        .current-plate span {
+            margin-top: -25px; 
+        }
+        .current-plate span:first-child {
+            margin-top: 0;
+        }
+
+        #feedback-pop {
+            position: absolute;
+            font-size: 22px;
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 5;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 100%;
+        }
+
+        .ingredients-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .ingredient-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 10px 2px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .ingredient-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .ingredient-btn small {
+            font-size: 9px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-height: 85vh;
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            overflow-y: auto;
+        }
+
+        .screen-content h2 {
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .screen-content p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        button.action-btn {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        button.action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .ranking-container {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding-right: 4px;
+        }
+
+        .rank-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .rank-card-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-position { font-weight: 700; min-width: 28px; }
+        .rank-name { font-weight: 500; }
+        .rank-sub { display: block; font-size: 11px; color: var(--muted); }
+        .rank-score { font-weight: 700; }
+
+        .pos-1 .rank-position { color: var(--yellow); }
+        .pos-2 .rank-position { color: #e2e8f0; }
+        .pos-3 .rank-position { color: #cd7f32; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div class="hud-header">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <small>PONTOS</small>
+                    <span id="score-txt" style="color: var(--green);">0</span>
+                </div>
+                <div class="stat-box">
+                    <small>TEMPO</small>
+                    <span id="time-txt" style="color: #ef4444;">60s</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-space">
+            <div class="order-container">
+                <div class="customer-avatar" id="customer">🧑🏾‍🦱</div>
+                <div class="order-title">Pedido do Cliente</div>
+                <div class="order-ingredients" id="order-display"></div>
+            </div>
+
+            <div class="kitchen-table">
+                <div id="feedback-pop"></div>
+                <div class="current-plate" id="plate-display"></div>
+            </div>
+
+            <div class="ingredients-grid">
+                <button class="ingredient-btn" onclick="addIngredient('🍞')"><span>🍞</span><small>PÃO</small></button>
+                <button class="ingredient-btn" onclick="addIngredient('🥩')"><span>🥩</span><small>CARNE</small></button>
+                <button class="ingredient-btn" onclick="addIngredient('🧀')"><span>🧀</span><small>QUEIJO</small></button>
+                <button class="ingredient-btn" onclick="addIngredient('🥬')"><span>🥬</span><small>ALFACE</small></button>
+                <button class="ingredient-btn" onclick="addIngredient('🍅')"><span>🍅</span><small>TOMATE</small></button>
+            </div>
+        </div>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 10px;">🍔</div>
+                <h2>Lanchonete do Estádio</h2>
+                <p>Monte os pedidos na ordem certa (de cima para baixo) o mais rápido possível!</p>
+                <p><strong>Bônus Proporcional ⚡:</strong> Quanto mais rápido você clicar por ingrediente, maior será o bônus de tempo somado no final do combo!</p>
+                <p><strong>Meta mínima:</strong> <span id="min-score-text" style="color: var(--yellow); font-weight: 700;">250</span> pontos</p>
+                <button class="action-btn" onclick="startGame()">Começar Desafio</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 10px;">🏆</div>
+                <h2>Fim do Expediente!</h2>
+                
+                <div class="reward-section" id="reward-status">
+                    VERIFICANDO RESULTADOS...
+                </div>
+
+                <h3 style="text-align: left; margin-top: 20px; font-size: 16px; color: var(--muted);">📊 Top 10 Líderes da Escola</h3>
+                
+                <div class="ranking-container" id="ranking-container">
+                    <div style="text-align: center; color: var(--muted); padding: 10px;">Carregando ranking...</div>
+                </div>
+
+                <button class="action-btn" onclick="restartGame()">Reiniciar Jogo</button>
+                <button class="action-btn" onclick="goAlbum()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); margin-top: 8px;">Voltar aos Pacotes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const MIN_SCORE = 250; 
+        document.getElementById("min-score-text").innerText = MIN_SCORE;
+
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) {
+            window.location.href = "../index.html";
+        }
+
+        const missionSlug = "lanche-estadio";
+
+        /* ELEMENTOS */
+        const scoreTxt = document.getElementById('score-txt');
+        const timeTxt = document.getElementById('time-txt');
+        const orderDisplay = document.getElementById('order-display');
+        const plateDisplay = document.getElementById('plate-display');
+        const customerTxt = document.getElementById('customer');
+        const feedbackPop = document.getElementById('feedback-pop');
+        
+        const modalStart = document.getElementById('modal-start');
+        const modalEnd = document.getElementById('modal-end');
+        const rewardStatus = document.getElementById('reward-status');
+        const rankingContainer = document.getElementById('ranking-container');
+
+        /* ESTADO DO JOGO */
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        
+        let currentOrder = [];
+        let currentPlate = [];
+        let completedOrdersCount = 0; 
+        let orderStartTime = 0; 
+        
+        const customers = ['🧑‍🦳','🧑🏾‍🦱','🧑🏾‍🦳','🧑🏾‍🦲','🧔🏾','🧑🏾','👱🏾','👩🏾','👧🏾','🧑🏻‍🦰','🧑🏻‍🦳','🧑🏻‍🦲','👩🏻‍🦰','👩🏻','👧🏻','👨‍🦱','👩','👨‍🦳','👧','🧔','👱‍♀️'];
+        const ingredientsPool = ['🥩', '🧀', '🥬', '🍅']; 
+        let loopTimer;
+
+        function startGame() {
+            modalStart.classList.add('hidden');
+            modalEnd.classList.add('hidden');
+            
+            score = 0;
+            timeLeft = 60;
+            completedOrdersCount = 0;
+            gameActive = true;
+
+            scoreTxt.innerText = score;
+            timeTxt.innerText = `${timeLeft}s`;
+
+            generateNewOrder();
+            loopTimer = setInterval(updateTimer, 1000);
+        }
+
+        function generateNewOrder() {
+            currentPlate = [];
+            plateDisplay.innerHTML = "";
+            
+            customerTxt.innerText = customers[Math.floor(Math.random() * customers.length)];
+            
+            currentOrder = [];
+            currentOrder.push('🍞'); 
+
+            let recheioCount = 1; 
+            if (completedOrdersCount >= 2 && completedOrdersCount < 5) recheioCount = 2;
+            else if (completedOrdersCount >= 5 && completedOrdersCount < 8) recheioCount = 3;
+            else if (completedOrdersCount >= 8) recheioCount = 4; 
+
+            for(let i = 0; i < recheioCount; i++) {
+                const randomIngredient = ingredientsPool[Math.floor(Math.random() * ingredientsPool.length)];
+                currentOrder.push(randomIngredient);
+            }
+            
+            currentOrder.push('🍞'); 
+
+            orderDisplay.innerHTML = currentOrder.map(ing => `<span>${ing}</span>`).join('');
+            orderStartTime = Date.now();
+        }
+
+        function addIngredient(ing) {
+            if (!gameActive) return;
+
+            currentPlate.push(ing);
+            
+            const newElem = document.createElement('span');
+            newElem.innerText = ing;
+            plateDisplay.appendChild(newElem);
+
+            const currentIndex = currentPlate.length - 1;
+            
+            if (currentPlate[currentIndex] !== currentOrder[currentIndex]) {
+                triggerFeedback("❌ ERROU A ORDEM!", "#ef4444");
+                currentPlate = [];
+                plateDisplay.innerHTML = "";
+                return;
+            }
+
+            // Cada acerto individual soma +10 fixo
+            score += 10;
+            scoreTxt.innerText = score;
+
+            // Se completou o lanche todo
+            if (currentPlate.length === currentOrder.length) {
+                const timeSpent = (Date.now() - orderStartTime) / 1000;
+                const totalItems = currentOrder.length;
+                
+                // AJUSTADO: Descobre a velocidade média de clique por item
+                const speedPerItem = timeSpent / totalItems;
+                
+                let bonusPerItem = 1;
+                let msg = "📦 ENTREGUE!";
+                let color = "#94a3b8";
+
+                // Escala de bônus proporcional por item
+                if (speedPerItem <= 1.0) {
+                    bonusPerItem = 5;
+                    msg = "⚡ SUPER RÁPIDO!";
+                    color = "#facc15";
+                } else if (speedPerItem <= 1.2) {
+                    bonusPerItem = 4;
+                    msg = "⏱️ BOM TEMPO!";
+                    color = "#22c55e";
+                } else if (speedPerItem <= 1.4) {
+                    bonusPerItem = 3;
+                    msg = "👍 NO RITMO!";
+                    color = "#3b82f6";
+                } else if (speedPerItem <= 1.6) {
+                    bonusPerItem = 2;
+                    msg = "🏃‍♂️ QUASE LÁ!";
+                    color = "#a855f7";
+                }
+
+                // Multiplica o bônus ganho pelo número total de itens do lanche
+                const finalTimeBonus = totalItems * bonusPerItem;
+                score += finalTimeBonus;
+                scoreTxt.innerText = score;
+                
+                triggerFeedback(`${msg} (+${finalTimeBonus} pts)`, color);
+                
+                completedOrdersCount++;
+                setTimeout(generateNewOrder, 250);
+            }
+        }
+
+        function triggerFeedback(text, color) {
+            feedbackPop.innerText = text;
+            feedbackPop.style.color = color;
+            feedbackPop.style.opacity = "1";
+            feedbackPop.style.transform = "translateY(-20px)";
+            
+            setTimeout(() => {
+                feedbackPop.style.opacity = "0";
+                feedbackPop.style.transform = "translateY(0px)";
+            }, 600);
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timeTxt.innerText = `${timeLeft}s`;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        async function endGame() {
+            gameActive = false;
+            clearInterval(loopTimer);
+            modalEnd.classList.remove('hidden');
+
+            rewardStatus.innerHTML = "Verificando recordes...";
+
+            try {
+                const { data: existingScore } = await client
+                    .from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug)
+                    .maybeSingle();
+
+                let melhorScore = score;
+
+                if (!existingScore) {
+                    await client.from("mission_scores").insert([{
+                        player_id: player.id,
+                        mission_slug: missionSlug,
+                        score: score
+                    }]);
+                } else if (score > existingScore.score) {
+                    await client
+                        .from("mission_scores")
+                        .update({ score: score })
+                        .eq("id", existingScore.id);
+                } else {
+                    melhorScore = existingScore.score;
+                }
+
+                let htmlResultado = `<div style="font-size:18px; margin-bottom:10px;">Sua Pontuação: <b>${score}</b></div>`;
+                if(score >= melhorScore && existingScore) {
+                    htmlResultado += `<p style="color:var(--green); font-size:12px; margin-bottom:10px;"> Novo Recorde Pessoal!</p>`;
+                }
+
+                const { data: existingReward } = await client
+                    .from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug)
+                    .maybeSingle();
+
+                if (existingReward) {
+                    htmlResultado += `<p style="color: var(--muted);">Você já garantiu seu pacote nesta missão.</p>`;
+                } else if (melhorScore < MIN_SCORE) {
+                    htmlResultado += `<p style="color:#ef4444;">Meta mínima não atingida (${MIN_SCORE} pts). Tente de novo!</p>`;
+                } else {
+                    const { error: errorReward } = await client
+                        .from("mission_rewards")
+                        .insert([{
+                            player_id: player.id,
+                            mission_slug: missionSlug,
+                            reward_type: "pack",
+                            reward_value: 1,
+                            unlocked: true,
+                            claimed: false
+                        }]);
+
+                    if (!errorReward) {
+                        htmlResultado += `<p style="color:#22c55e; font-weight:700;">🎁 Incrível! Pacote Adicional Liberado com Sucesso!</p>`;
+                    } else {
+                        htmlResultado += `<p style="color:#ef4444;">Erro ao gerar prêmio.</p>`;
+                    }
+                }
+
+                rewardStatus.innerHTML = htmlResultado;
+                await fetchLeaderboard();
+
+            } catch (err) {
+                console.error(err);
+                rewardStatus.innerText = "Erro ao conectar ao banco de dados.";
+            }
+        }
+
+        async function fetchLeaderboard() {
+            rankingContainer.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 10px;">Carregando Top 10...</div>`;
+            
+            const { data: leaderboard, error } = await client
+                .from("mission_scores")
+                .select(`
+                    score,
+                    player_id,
+                    players!mission_scores_player_id_fkey (
+                        name,
+                        emoji,
+                        turma_area
+                    )
+                `)
+                .eq("mission_slug", missionSlug)
+                .order("score", { ascending: false })
+                .limit(10);
+
+            if (error || !leaderboard) {
+                rankingContainer.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 10px;">Não foi possível carregar o ranking.</div>`;
+                return;
+            }
+
+            rankingContainer.innerHTML = "";
+            
+            leaderboard.forEach((row, index) => {
+                const posicao = index + 1;
+                const playerData = row.players;
+                let nomeExibicao = "Jogador Misterioso";
+                let emojiExibicao = "🍔";
+                let turmaExibicao = "Geral";
+
+                if (playerData) {
+                    nomeExibicao = playerData.name;
+                    emojiExibicao = playerData.emoji || "🍔";
+                    turmaExibicao = playerData.turma_area || "Geral";
+                }
+
+                const eVoce = row.player_id === player.id;
+                let classePosicao = posicao <= 3 ? `pos-${posicao}` : '';
+
+                rankingContainer.innerHTML += `
+                    <div class="rank-card ${classePosicao}" style="${eVoce ? 'background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.25);' : ''}">
+                        <div class="rank-card-left">
+                            <span class="rank-position">#${posicao}</span>
+                            <div>
+                                <span class="rank-name" style="${eVoce ? 'font-weight:700; color:var(--green);' : ''}">
+                                    ${emojiExibicao} ${nomeExibicao} ${eVoce ? '(Você)' : ''}
+                                </span>
+                                <span class="rank-sub">${turmaExibicao}</span>
+                            </div>
+                        </div>
+                        <span class="rank-score" style="${eVoce ? 'color:var(--green);' : ''}">${row.score}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function restartGame() {
+            modalEnd.classList.add('hidden');
+            modalStart.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>
