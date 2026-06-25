@@ -257,3 +257,65 @@ footer {
     font-size: 13px; color: var(--text-muted);
     letter-spacing: 1px;
 }
+/* ... (mantenha o início do CSS anterior) ... */
+
+/* LAYOUT DE PROMOÇÃO / PLACAR */
+.promo-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    gap: 20px;
+}
+
+.scoreboard {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 30px 60px;
+    border-radius: 40px;
+    border: 2px solid var(--green-neon);
+    margin-bottom: 20px;
+}
+
+.team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.flag { font-size: 80px; line-height: 1; }
+.team-name { font-size: 20px; font-weight: 800; margin-top: 10px; color: var(--silver); }
+
+.score {
+    font-size: 100px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px var(--green-neon);
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.promo-msg {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--yellow-neon);
+    max-width: 800px;
+}
+
+.qr-container {
+    background: #fff;
+    padding: 15px;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.qr-container img {
+    width: 200px;
+    height: 200px;
+    display: block;
+}
+
+/* ... (resto do CSS anterior) ... */

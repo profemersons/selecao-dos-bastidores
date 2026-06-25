@@ -295,6 +295,10 @@ async function loadMissionPacks() {
                 nomeMissao = "Onde está o Craque?";
                 emojiMissao = "🔍";
                 break;
+            case "qrcode1":
+                nomeMissao = "Missão Brasil Campeão";
+                emojiMissao = "🔰";
+                break;
             default:
                 if (registro.mission_slug) {
                     nomeMissao = `Missão ${registro.mission_slug.toUpperCase()}`;
@@ -330,7 +334,7 @@ async function loadMissionPacks() {
 
 async function openMissionPack(reward, cardElement) {
     if (!cardElement || cardElement.style.pointerEvents === "none") return;
-    
+
     // Trava de interface imediata (Front-end blocking)
     cardElement.style.pointerEvents = "none";
 

@@ -1,137 +1,141 @@
 /* =========================
 CONFIGURAÇÕES DA TV
 ========================= */
-const SCREEN_TIME = 12000;   // Rotaciona a tela a cada 12 segundos (melhor leitura para TV)
-const REFRESH_TIME = 180000; // Recarrega do banco a cada 3 minutos
+const SCREEN_TIME = 12000;   // 12 segundos por tela
+const REFRESH_TIME = 180000; // Sincroniza com banco a cada 3 min
 
 let screens = [];
 let currentScreen = 0;
 
-/* =========================
-INITIALIZATION
-========================= */
 init();
 
 async function init() {
     updateClock();
     setInterval(updateClock, 1000);
-
     await loadAllDataAndInsights();
     renderCurrentScreen();
-
-    // Loop de transição de tela
     setInterval(nextScreen, SCREEN_TIME);
-
-    // Loop de requisição ao Supabase
-    setInterval(async () => {
-        await loadAllDataAndInsights();
-    }, REFRESH_TIME);
+    setInterval(async () => { await loadAllDataAndInsights(); }, REFRESH_TIME);
 }
 
 function updateClock() {
     const now = new Date();
-    document.getElementById("clock").textContent = now.toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-    });
+    const clockEl = document.getElementById("clock");
+    if (clockEl) clockEl.textContent = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-/* =========================
-CORE DATA ENGINE & INSIGHTS
-========================= */
+
+/* Tradutor de Missões (Slugs -> Nomes Oficiais) */
+function getMissionDetails(slug) {
+    switch (slug) {
+        case "embaixadinhas": return { name: "Missão Embaixadinha", emoji: "⚽" };
+        case "coleta": return { name: "Missão de Coleta", emoji: "♻️" };
+        case "conexao": return { name: "Missão Instrumentos de Trabalho", emoji: "🔧" };
+        case "memoria": return { name: "Missão Sincronia", emoji: "🧠" };
+        case "amigos1": return { name: "Missão Rede de Amigos", emoji: "🤝" };
+        case "lanche-estadio": return { name: "Missão Lanchonete do Estádio", emoji: "🍔" };
+        case "bancada": return { name: "Missão Bancada Organizada", emoji: "👨‍🏭" };
+        case "corrida-estagiario": return { name: "Missão Corrida do Estagiário", emoji: "🏃‍♀️" };
+        case "cade-profissional": return { name: "Onde está o Craque?", emoji: "🔍" };
+        case "qrcode1": return { name: "Missão Brasil Campeão", emoji: "🔰" };
+        default: return { name: slug.toUpperCase(), emoji: "🎯" };
+    }
+}
+
 async function loadAllDataAndInsights() {
-    const { data: players } = await client.from("players").select("*");
+    try {
+        const [playersRes, inventoryRes, missionsRes] = await Promise.all([
+            client.from("players").select("name, emoji, turma_area, type, points, total_stickers, friend_count, album_completion").limit(5000),
+            client.from("inventory").select("quantity").limit(5000),
+            client.from("mission_rewards").select("mission_slug").limit(5000)
+        ]);
 
-    if (!players || players.length === 0) return;
+        const players = playersRes.data || [];
+        const inventory = inventoryRes.data || [];
+        const missions = missionsRes.data || [];
 
-    document.getElementById("lastUpdate").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", {hour: '2-digit', minute:'2-digit'});
+        if (players.length === 0) return;
 
-    // 📊 INSIGHTS GERAIS CALCULADOS NA HORA
-    const totalStickersInGame = players.reduce((acc, p) => acc + (p.total_stickers || 0), 0);
-    const totalTradesInGame = players.reduce((acc, p) => acc + (p.trade_count || 0), 0);
-    const validCompletions = players.filter(p => (p.album_completion || 0) > 0);
-    const avgCompletion = validCompletions.length > 0 
-        ? (validCompletions.reduce((acc, p) => acc + Number(p.album_completion), 0) / validCompletions.length)
-        : 0;
+        // Cálculos Básicos
+        const totalJogadores = players.length;
+        const totalFigDistribuida = inventory.reduce((acc, item) => acc + (parseInt(item.quantity, 10) || 0), 0);
 
-    // DEFINIÇÃO DOS PAINÉIS ROTATIVOS
-    screens = [
-        {
-            type: "insights",
-            title: "📊 ESTATÍSTICAS GERAIS DA ARENA",
-            cards: [
-                { icon: "🎫", val: totalStickersInGame, label: "Figurinhas Coladas" },
-                { icon: "🔄", val: totalTradesInGame, label: "Trocas Feitas" },
-                { icon: "📈", val: `${avgCompletion.toFixed(1)}%`, label: "Média deÁlbuns Completos" }
-            ]
-        },
-        {
-            type: "split",
-            title: "🏆 ARTILHARIA GERAL: CAMISA 10",
-            metric: "points",
-            unit: "pts",
-            data: [...players].sort((a, b) => (b.points || 0) - (a.points || 0))
-        },
-        {
-            type: "split",
-            title: "⚽ COLECIONADORES: ARTILHEIRO DAS FIGURINHAS",
-            metric: "total_stickers",
-            unit: "fig.",
-            data: [...players].sort((a, b) => (b.total_stickers || 0) - (a.total_stickers || 0))
-        },
-        {
-            type: "split",
-            title: "⭐ CAÇADORES DE FIGURINHAS RARAS",
-            metric: "shiny_count",
-            unit: "⭐ Raras",
-            data: [...players].sort((a, b) => (b.shiny_count || 0) - (a.shiny_count || 0))
-        },
-        {
-            type: "split",
-            title: "🤝 MERCADO DA BOLA: REI DAS SUBSTITUIÇÕES",
-            metric: "trade_count",
-            unit: "trocas",
-            data: [...players].sort((a, b) => (b.trade_count || 0) - (a.trade_count || 0))
-        },
-        {
-            type: "groups",
-            title: "🏫 TAÇA DAS TURMAS (MÉDIA DE ÁLBUM)",
-            data: buildGroupRanking(players, "student")
-        },
-        {
-            type: "groups",
-            title: "🏢 TAÇA DOS SETORES / FUNCIONÁRIOS",
-            data: buildGroupRanking(players, "employee")
-        }
-    ];
+        // Ranking de Missões com nomes padronizados
+        const missionMap = {};
+        missions.forEach(m => {
+            if (m.mission_slug) {
+                missionMap[m.mission_slug] = (missionMap[m.mission_slug] || 0) + 1;
+            }
+        });
+        const missionRanking = Object.entries(missionMap).map(([slug, count]) => {
+            const details = getMissionDetails(slug);
+            return { name: details.name, emoji: details.emoji, total: count };
+        }).sort((a, b) => b.total - a.total);
+
+        // Definição das Telas
+        screens = [
+            {
+                type: "insights",
+                title: "📊 ARENA EM NÚMEROS",
+                cards: [
+                    { icon: "👥", val: totalJogadores, label: "Jogadores Inscritos" },
+                    { icon: "🎫", val: totalFigDistribuida, label: "Figurinhas Distribuídas" }
+                ]
+            },
+            {
+                type: "promo",
+                title: "🎁 RECOMPENSA DA RODADA",
+                msg: "Ontem o Brasil ganhou o jogo e hoje você ganha um pacote extra!",
+                qrUrl: "https://profemersons.github.io/selecao-dos-bastidores/central2/brasil_campeao.svg"
+            },
+            {
+                type: "missions",
+                title: "🎯 RANKING COLETIVO DE MISSÕES",
+                data: missionRanking
+            },
+            {
+                type: "split",
+                title: "🏆 CAMISA 10: MELHORES PONTUAÇÕES",
+                metric: "points", unit: "pts",
+                data: [...players].sort((a, b) => b.points - a.points)
+            },
+            {
+                type: "split",
+                title: "🤝 AMIGO DA TORCIDA: MAIS CONEXÕES",
+                metric: "friend_count", unit: "amigos",
+                data: [...players].sort((a, b) => b.friend_count - a.friend_count)
+            },
+            {
+                type: "split",
+                title: "⚽ COLECIONADORES: ÁLBUNS AVANÇADOS",
+                metric: "total_stickers", unit: "fig.",
+                data: [...players].sort((a, b) => b.total_stickers - a.total_stickers)
+            },
+            {
+                type: "groups",
+                title: "🏫 TAÇA DAS TURMAS (MÉDIA DE ÁLBUM)",
+                data: buildGroupRanking(players)
+            }
+        ];
+
+        document.getElementById("lastUpdate").textContent = "Sincronizado às " + new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
+
+    } catch (e) {
+        console.error("Erro na Central:", e);
+    }
 }
 
-/* =========================
-BUILDERS DE CLASSIFICAÇÃO COLETIVA
-========================= */
-function buildGroupRanking(players, filterType) {
-    const filtered = players.filter(p => p.type === filterType);
+function buildGroupRanking(players) {
     const groups = {};
-
-    filtered.forEach(p => {
-        const area = p.turma_area || (filterType === "student" ? "Sem Turma" : "Sem Setor");
-        if (!groups[area]) {
-            groups[area] = { name: area, total: 0, count: 0 };
-        }
+    players.filter(p => p.type !== 'employee').forEach(p => {
+        const area = p.turma_area || "Geral";
+        if (!groups[area]) groups[area] = { name: area, total: 0, count: 0 };
         groups[area].total += Number(p.album_completion || 0);
         groups[area].count++;
     });
-
-    return Object.values(groups)
-        .map(g => ({ name: g.name, average: g.total / g.count }))
-        .sort((a, b) => b.average - a.average)
-        .slice(0, 10); // Top 10 turmas/setores
+    return Object.values(groups).map(g => ({ name: g.name, average: g.total / g.count })).sort((a, b) => b.average - a.average).slice(0, 10);
 }
 
-/* =========================
-ROTAÇÃO E RENDERIZADOR CONTROLLER
-========================= */
 function nextScreen() {
     currentScreen = (currentScreen + 1) % screens.length;
     renderCurrentScreen();
@@ -145,102 +149,104 @@ function renderCurrentScreen() {
     const container = document.getElementById("screenContainer");
 
     if (screen.type === "insights") {
-        renderInsightsScreen(container, screen);
-    } else if (screen.type === "groups") {
-        renderGroupsScreen(container, screen);
-    } else {
-        renderSplitPlayerScreen(container, screen);
-    }
-}
-
-/* RENDER 1: ESTATÍSTICAS GERAIS */
-function renderInsightsScreen(container, screen) {
-    container.innerHTML = `
-        <div class="ranking-card">
-            <div class="insights-grid">
-                ${screen.cards.map(c => `
-                    <div class="insight-box">
-                        <div class="insight-icon">${c.icon}</div>
-                        <div class="insight-val">${c.val}</div>
-                        <div class="insight-label">${c.label}</div>
-                    </div>
-                `).join("")}
-            </div>
-        </div>
-    `;
-}
-
-/* RENDER 2: SPLIT PRESTIGE (PÓDIO + TOP 4~10 LADO A LADO) */
-function renderSplitPlayerScreen(container, screen) {
-    const top3 = screen.data.slice(0, 3);
-    const rest = screen.data.slice(3, 10);
-    const m = screen.metric;
-    const u = screen.unit;
-
-    container.innerHTML = `
-        <div class="ranking-card">
-            <div class="split-layout">
-                
-                <div class="podium-side">
-                    
-                    <div class="podium-column second">
-                        <div class="podium-badge">🥈</div>
-                        <div class="podium-user-emoji">${top3[1]?.emoji || "👤"}</div>
-                        <div class="podium-name">${top3[1]?.name || "Disponível"}</div>
-                        <div class="podium-sub">${top3[1]?.turma_area || ""}</div>
-                        <div class="podium-score">${top3[1] ? top3[1][m] : 0} <small>${u}</small></div>
-                    </div>
-
-                    <div class="podium-column first">
-                        <div class="podium-badge">🥇</div>
-                        <div class="podium-user-emoji">${top3[0]?.emoji || "👤"}</div>
-                        <div class="podium-name">${top3[0]?.name || "Disponível"}</div>
-                        <div class="podium-sub">${top3[0]?.turma_area || ""}</div>
-                        <div class="podium-score">${top3[0] ? top3[0][m] : 0} <small>${u}</small></div>
-                    </div>
-
-                    <div class="podium-column third">
-                        <div class="podium-badge">🥉</div>
-                        <div class="podium-user-emoji">${top3[2]?.emoji || "👤"}</div>
-                        <div class="podium-name">${top3[2]?.name || "Disponível"}</div>
-                        <div class="podium-sub">${top3[2]?.turma_area || ""}</div>
-                        <div class="podium-score">${top3[2] ? top3[2][m] : 0} <small>${u}</small></div>
-                    </div>
-
-                </div>
-
-                <div class="list-side">
-                    ${rest.map((p, idx) => `
-                        <div class="tv-row">
-                            <div class="tv-row-left">
-                                <span class="tv-idx">#${idx + 4}</span>
-                                <div>
-                                    <span class="tv-name">${p.emoji || ""} ${p.name}</span>
-                                    <span class="tv-sub"> • ${p.turma_area || "Geral"}</span>
-                                </div>
-                            </div>
-                            <span class="tv-val">${p[m] || 0} ${u}</span>
+        container.innerHTML = `
+            <div class="ranking-card">
+                <div class="insights-grid" style="grid-template-columns: repeat(2, 1fr); gap: 40px;">
+                    ${screen.cards.map(c => `
+                        <div class="insight-box" style="padding: 60px 20px;">
+                            <div class="insight-icon" style="font-size: 80px;">${c.icon}</div>
+                            <div class="insight-val" style="font-size: 70px;">${c.val}</div>
+                            <div class="insight-label" style="font-size: 22px;">${c.label}</div>
                         </div>
                     `).join("")}
                 </div>
-
-            </div>
-        </div>
-    `;
-}
-
-/* RENDER 3: CLASSIFICAÇÃO DE GRUPOS EM DUAS COLUNAS */
-function renderGroupsScreen(container, screen) {
-    container.innerHTML = `
-        <div class="ranking-card">
-            <div class="groups-grid">
-                ${screen.data.map((g, idx) => `
-                    <div class="group-row top-${idx}">
-                        <div class="group-name">#${idx + 1} - ${g.name}</div>
-                        <div class="group-val">${g.average.toFixed(1)}%</div>
+            </div>`;
+    } 
+    else if (screen.type === "promo") {
+        container.innerHTML = `
+            <div class="ranking-card" style="background: linear-gradient(135deg, #009739 0%, #FEDD00 50%, #009739 100%); border: none; padding: 15px;">
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #000; gap: 15px;">
+                    <div style="background: rgba(0,0,0,0.85); padding: 10px 30px; border-radius: 15px; color: #fff;">
+                        <span style="font-size: 38px; font-weight: 900; letter-spacing: 3px;">BRASIL 3 x 0 ESCÓCIA</span>
                     </div>
-                `).join("")}
-            </div>
-        </div>
-    `;
+                    
+                    <div style="background: #fff; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                        <img src="${screen.qrUrl}" style="width: 260px; height: 260px; display: block;" alt="QR Code Brasil">
+                    </div>
+
+                    <div style="max-width: 800px; font-size: 22px; font-weight: 900; background: rgba(255,255,255,0.95); padding: 8px 25px; border-radius: 12px; border: 2px solid #000; text-align: center;">
+                        ${screen.msg}
+                    </div>
+                </div>
+            </div>`;
+    }
+    else if (screen.type === "missions") {
+        container.innerHTML = `
+            <div class="ranking-card">
+                <div class="groups-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                    ${screen.data.map((m, idx) => `
+                        <div class="group-row" style="border-left: 6px solid var(--purple-neon); background: rgba(255,255,255,0.05); padding: 15px 25px;">
+                            <div class="group-name" style="font-size: 20px;">${m.emoji} ${m.name}</div>
+                            <div class="group-val" style="color: var(--purple-neon); font-size: 28px;">${m.total}x</div>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>`;
+    }
+    else if (screen.type === "groups") {
+        container.innerHTML = `
+            <div class="ranking-card">
+                <div class="groups-grid" style="grid-template-columns: 1fr 1fr;">
+                    ${screen.data.map((g, idx) => `
+                        <div class="group-row top-${idx}">
+                            <div class="group-name">#${idx + 1} - ${g.name}</div>
+                            <div class="group-val">${g.average.toFixed(1)}%</div>
+                        </div>
+                    `).join("")}
+            </div></div>`;
+    }
+    else {
+        const t3 = screen.data.slice(0, 3);
+        const rest = screen.data.slice(3, 10);
+        container.innerHTML = `
+            <div class="ranking-card"><div class="split-layout">
+                <div class="podium-side">
+                    <div class="podium-column second">
+                        <div class="podium-badge">🥈</div>
+                        <div class="podium-user-emoji">${t3[1]?.emoji || "👤"}</div>
+                        <div class="podium-name">${t3[1]?.name || "---"}</div>
+                        <div class="podium-sub">${t3[1]?.turma_area || "Geral"}</div>
+                        <div class="podium-score">${t3[1] ? t3[1][screen.metric] : 0}</div>
+                    </div>
+                    <div class="podium-column first">
+                        <div class="podium-badge">🥇</div>
+                        <div class="podium-user-emoji">${t3[0]?.emoji || "👤"}</div>
+                        <div class="podium-name">${t3[0]?.name || "---"}</div>
+                        <div class="podium-sub">${t3[0]?.turma_area || "Geral"}</div>
+                        <div class="podium-score" style="color:#fff">${t3[0] ? t3[0][screen.metric] : 0}</div>
+                    </div>
+                    <div class="podium-column third">
+                        <div class="podium-badge">🥉</div>
+                        <div class="podium-user-emoji">${t3[2]?.emoji || "👤"}</div>
+                        <div class="podium-name">${t3[2]?.name || "---"}</div>
+                        <div class="podium-sub">${t3[2]?.turma_area || "Geral"}</div>
+                        <div class="podium-score">${t3[2] ? t3[2][screen.metric] : 0}</div>
+                    </div>
+                </div>
+                <div class="list-side">
+                    ${rest.map((p, i) => `
+                        <div class="tv-row">
+                            <div class="tv-row-left">
+                                <span class="tv-idx">#${i+4}</span>
+                                <div>
+                                    <span class="tv-name">${p.emoji || ""} ${p.name.split(' ')[0]}</span>
+                                    <span class="tv-sub"> • ${p.turma_area || "Geral"}</span>
+                                </div>
+                            </div>
+                            <span class="tv-val">${p[screen.metric]}</span>
+                        </div>
+                    `).join("")}
+                </div>
+            </div></div>`;
+    }
 }
