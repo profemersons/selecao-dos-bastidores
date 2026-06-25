@@ -4,11 +4,9 @@ if (!player) {
     window.location.href = "../index.html";
 }
 
-// Definição estática das missões da sua plataforma para o feedback visual completo
 const LISTA_MISSOES = [
     { slug: "genius", nome: "Jogo Genius", emoji: "🧠" },
     { slug: "embaixadinhas", nome: "Embaixadinhas", emoji: "⚽" }
-    // Adicione novas missões aqui se houver mais futuramente
 ];
 
 let packsRemaining = 3;
@@ -42,7 +40,6 @@ async function loadTodayStatus() {
 function updateUI() {
     document.getElementById("remainingText").textContent = `📦 Pacotes disponíveis hoje: ${packsRemaining}/3`;
 
-    // Atualiza os 3 pacotes diários padrões do topo
     const dailyPacks = document.querySelectorAll("main > .packs > .pack");
     dailyPacks.forEach((pack, index) => {
         if (index >= packsRemaining) {
@@ -53,7 +50,6 @@ function updateUI() {
     });
 }
 
-// Vincula o clique apenas nos pacotes diários normais do topo
 document.querySelectorAll("main > .packs > .pack").forEach(pack => {
     pack.onclick = () => openPack();
 });
@@ -227,34 +223,28 @@ function getGameDayStart() {
 }
 
 /* ========================================================
-   SISTEMA DE PACOTES DE MISSÃO (COM NOMES E EMOJIS DINÂMICOS)
+   SISTEMA DE PACOTES DE MISSÃO (SEGURO E ORDENADO)
 ======================================================== */
 async function loadMissionPacks() {
     const container = document.getElementById("missionPacks");
     if (!container) return;
 
     container.innerHTML = "";
-
-    // Garantia de conversão de tipo para o ID do jogador
     const playerIdBusca = isNaN(player.id) ? player.id : Number(player.id);
 
-    console.log("🔍 Buscando pacotes de missão para o jogador ID:", playerIdBusca);
-
-    // 1. Busca TODAS as recompensas deste jogador no banco
+    // 1. Busca as recompensas ordenando diretamente no banco (falses primeiro)
     const { data: userRewards, error } = await client
         .from("mission_rewards")
         .select("*")
-        .eq("player_id", playerIdBusca);
+        .eq("player_id", playerIdBusca)
+        .order("claimed", { ascending: true }); // false vem antes de true no PostgreSQL
 
     if (error) {
-        console.error("❌ Erro do Supabase ao buscar missões:", error);
+        console.error("❌ Erro ao buscar missões:", error);
         container.innerHTML = `<p style="text-align:center;color:#ef4444;font-size:12px;">Erro ao carregar pacotes de missão.</p>`;
         return;
     }
 
-    console.log("📊 Dados retornados do banco de dados:", userRewards);
-
-    // Se o array vier vazio, o aluno realmente não tem linhas associadas ao ID dele
     if (!userRewards || userRewards.length === 0) {
         container.innerHTML = `
             <p style="text-align:center; opacity:.6; padding: 20px; font-size: 14px; width: 100%;">
@@ -263,15 +253,11 @@ async function loadMissionPacks() {
         return;
     }
 
-    // 2. Renderiza os cards baseados nas linhas existentes com personalização por slug
     userRewards.forEach(registro => {
         const packCard = document.createElement("div");
-
-        // Configuração padrão caso venha um slug mapeado diferente
         let nomeMissao = "Pacote de Missão";
         let emojiMissao = "🎯";
 
-        // Personalização dinâmica baseada no mission_slug
         switch (registro.mission_slug) {
             case "embaixadinhas":
                 nomeMissao = "Missão Embaixadinha";
@@ -310,37 +296,31 @@ async function loadMissionPacks() {
                 emojiMissao = "🔍";
                 break;
             default:
-                // Fallback amigável caso tenha algum outro slug no banco futuramente
                 if (registro.mission_slug) {
                     nomeMissao = `Missão ${registro.mission_slug.toUpperCase()}`;
                 }
                 break;
         }
 
-        let badgeHTML = "";
+        // Validação estrita do estado boleano
+        const isClaimed = registro.claimed === true || registro.claimed === "true";
 
-        // Lógica estrita baseada na coluna 'claimed'
-        if (registro.claimed === false || registro.claimed === "false") {
-            // ESTADO: DISPONÍVEL PARA ABRIR
+        if (!isClaimed) {
             packCard.className = "pack mission";
-            badgeHTML = `<span class="pack-status-badge badge-available">🎁 Disponível</span>`;
             packCard.innerHTML = `
                 <div class="pack-emoji">${emojiMissao}</div>
                 <div class="pack-title">${nomeMissao}</div>
                 <div class="pack-info">Clique para resgatar suas 4 figurinhas</div>
-                ${badgeHTML}
+                <span class="pack-status-badge badge-available">🎁 Disponível</span>
             `;
-            // Passa o objeto completo e o card para manipulação segura
             packCard.onclick = () => openMissionPack(registro, packCard);
         } else {
-            // ESTADO: JÁ COLETADO / BLOQUEADO (FEEDBACK VISUAL)
             packCard.className = "pack mission used";
-            badgeHTML = `<span class="pack-status-badge badge-claimed">✔️ Já Coletado</span>`;
             packCard.innerHTML = `
                 <div class="pack-emoji">${emojiMissao}</div>
                 <div class="pack-title">${nomeMissao}</div>
                 <div class="pack-info">Você já abriu este pacote de recompensa</div>
-                ${badgeHTML}
+                <span class="pack-status-badge badge-claimed">✔️ Já Coletado</span>
             `;
         }
 
@@ -348,52 +328,66 @@ async function loadMissionPacks() {
     });
 }
 
-async function openMissionPack(reward, event) {
-    // Trava o clique visual instantaneamente para evitar bugs de clique duplo
-    const card = event.currentTarget;
-    if (card) {
-        card.style.pointerEvents = "none";
+async function openMissionPack(reward, cardElement) {
+    if (!cardElement || cardElement.style.pointerEvents === "none") return;
+    
+    // Trava de interface imediata (Front-end blocking)
+    cardElement.style.pointerEvents = "none";
+
+    try {
+        // [VERIFICAÇÃO DE SEGURANÇA SEVERA]: Reconsultar direto na tabela antes de rodar a lógica
+        const { data: doubleCheck, error: errCheck } = await client
+            .from("mission_rewards")
+            .select("claimed")
+            .eq("id", reward.id)
+            .single();
+
+        if (errCheck || !doubleCheck || doubleCheck.claimed === true || doubleCheck.claimed === "true") {
+            alert("Este pacote já foi resgatado!");
+            await loadMissionPacks();
+            return;
+        }
+
+        // [MUDANÇA DE ESTADO IMEDIATA]: Marca como coletado antes de rodar os laços assíncronos do inventário
+        const { error: errUpdate } = await client
+            .from("mission_rewards")
+            .update({ claimed: true })
+            .eq("id", reward.id);
+
+        if (errUpdate) {
+            console.error(errUpdate);
+            alert("Erro ao processar a segurança do pacote.");
+            cardElement.style.pointerEvents = "auto";
+            return;
+        }
+
+        // Busca figurinhas válidas
+        const { data: commons } = await client
+            .from("stickers")
+            .select("*")
+            .eq("type", "common");
+
+        if (!commons || commons.length === 0) {
+            alert("Erro ao carregar figurinhas do banco.");
+            return;
+        }
+
+        // Sorteio seguro
+        const rewards = [];
+        for (let i = 0; i < 4; i++) {
+            const sticker = commons[Math.floor(Math.random() * commons.length)];
+            const isShiny = Math.random() < 0.1;
+
+            rewards.push({ ...sticker, is_shiny: isShiny });
+            await addToInventory(sticker.id, isShiny);
+        }
+
+        await recalculatePlayerStats(player.id);
+        showRewards(rewards);
+        await loadMissionPacks();
+
+    } catch (err) {
+        console.error("Erro crítico na transação:", err);
+        cardElement.style.pointerEvents = "auto";
     }
-
-    // 1. Busca as figurinhas comuns para gerar o pacote
-    const { data: commons } = await client
-        .from("stickers")
-        .select("*")
-        .eq("type", "common");
-
-    if (!commons || commons.length === 0) {
-        alert("Erro ao carregar figurinhas do banco.");
-        if (card) card.style.pointerEvents = "auto";
-        return;
-    }
-
-    // 2. Sorteia as 4 figurinhas
-    const rewards = [];
-    for (let i = 0; i < 4; i++) {
-        const sticker = commons[Math.floor(Math.random() * commons.length)];
-        const isShiny = Math.random() < 0.1; // 10% de chance de brilhante
-
-        rewards.push({ ...sticker, is_shiny: isShiny });
-        await addToInventory(sticker.id, isShiny);
-    }
-
-    // 3. Atualiza no banco: muda claimed para TRUE
-    const { error } = await client
-        .from("mission_rewards")
-        .update({ claimed: true })
-        .eq("id", reward.id);
-
-    if (error) {
-        console.error(error);
-        alert("Erro ao registrar o resgate no banco de dados.");
-        if (card) card.style.pointerEvents = "auto";
-        return;
-    }
-
-    // 4. Recalcula os status globais do perfil e abre a animação na tela
-    await recalculatePlayerStats(player.id);
-    showRewards(rewards);
-
-    // 5. Atualiza a interface local (o card que era 'Disponível' vira 'Já Coletado' na hora)
-    await loadMissionPacks();
 }
