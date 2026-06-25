@@ -24,7 +24,6 @@ function updateClock() {
     if (clockEl) clockEl.textContent = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-
 /* Tradutor de Missões (Slugs -> Nomes Oficiais) */
 function getMissionDetails(slug) {
     switch (slug) {
@@ -44,21 +43,55 @@ function getMissionDetails(slug) {
 
 async function loadAllDataAndInsights() {
     try {
-        const [playersRes, inventoryRes, missionsRes] = await Promise.all([
+        // Buscas em paralelo. Trazemos apenas as colunas estritamente necessárias do inventário com o filtro de is_shiny igual a false
+        const [playersRes, inventoryCountRes, missionsRes, inventoryDataRes] = await Promise.all([
             client.from("players").select("name, emoji, turma_area, type, points, total_stickers, friend_count, album_completion").limit(5000),
-            client.from("inventory").select("quantity").limit(5000),
-            client.from("mission_rewards").select("mission_slug").limit(5000)
+            client.from("inventory").select("*", { count: 'exact', head: true }),
+            client.from("mission_rewards").select("mission_slug").limit(5000),
+            client.from("inventory").select("sticker_id, quantity").eq("is_shiny", false).limit(5000)
         ]);
 
         const players = playersRes.data || [];
-        const inventory = inventoryRes.data || [];
+        const totalFigDistribuida = inventoryCountRes.count || 0;
         const missions = missionsRes.data || [];
+        const inventoryItems = inventoryDataRes.data || [];
+
+        // 🧠 CÁLCULO DAS RARIDADES EM MEMÓRIA (Rápido e sem travar o banco)
+        let figComum = "---";
+        let figRara = "---";
+
+        if (inventoryItems.length > 0) {
+            const stickerTotals = {};
+            
+            // Agrupa e soma as quantidades de cada figurinha na memória da TV
+            inventoryItems.forEach(item => {
+                const id = item.sticker_id;
+                const qty = parseInt(item.quantity, 10) || 0;
+                stickerTotals[id] = (stickerTotals[id] || 0) + qty;
+            });
+
+            // Transforma em array para ordenar e descobrir a real mais comum e mais rara
+            const sortedStickers = Object.entries(stickerTotals).map(([id, total]) => ({
+                id,
+                total
+            }));
+
+            if (sortedStickers.length > 0) {
+                // Ordena do maior total para o menor
+                sortedStickers.sort((a, b) => b.total - a.total);
+                
+                const maisComum = sortedStickers[0];
+                const maisRara = sortedStickers[sortedStickers.length - 1];
+
+                figComum = `Nº ${maisComum.id} (${maisComum.total} un.)`;
+                figRara = `Nº ${maisRara.id} (${maisRara.total} un.)`;
+            }
+        }
 
         if (players.length === 0) return;
 
         // Cálculos Básicos
         const totalJogadores = players.length;
-        const totalFigDistribuida = inventory.reduce((acc, item) => acc + (parseInt(item.quantity, 10) || 0), 0);
 
         // Ranking de Missões com nomes padronizados
         const missionMap = {};
@@ -79,7 +112,9 @@ async function loadAllDataAndInsights() {
                 title: "📊 ARENA EM NÚMEROS",
                 cards: [
                     { icon: "👥", val: totalJogadores, label: "Jogadores Inscritos" },
-                    { icon: "🎫", val: totalFigDistribuida, label: "Figurinhas Distribuídas" }
+                    { icon: "🎫", val: totalFigDistribuida, label: "Figurinhas Distribuídas" },
+                    { icon: "🃏", val: figComum, label: "Figurinha Regular Mais Comum" },
+                    { icon: "👑", val: figRara, label: "Figurinha Regular Mais Rara" }
                 ]
             },
             {
@@ -114,7 +149,12 @@ async function loadAllDataAndInsights() {
             {
                 type: "groups",
                 title: "🏫 TAÇA DAS TURMAS (MÉDIA DE ÁLBUM)",
-                data: buildGroupRanking(players)
+                data: buildGroupRanking(players, "student")
+            },
+            {
+                type: "groups",
+                title: "🏢 TAÇA DOS SETORES / FUNCIONÁRIOS",
+                data: buildGroupRanking(players, "employee")
             }
         ];
 
@@ -124,16 +164,21 @@ async function loadAllDataAndInsights() {
         console.error("Erro na Central:", e);
     }
 }
-
-function buildGroupRanking(players) {
+function buildGroupRanking(players, filterType) {
+    const filtered = players.filter(p => p.type === filterType);
     const groups = {};
-    players.filter(p => p.type !== 'employee').forEach(p => {
-        const area = p.turma_area || "Geral";
+
+    filtered.forEach(p => {
+        const area = p.turma_area || (filterType === "student" ? "Geral" : "Sem Setor");
         if (!groups[area]) groups[area] = { name: area, total: 0, count: 0 };
         groups[area].total += Number(p.album_completion || 0);
         groups[area].count++;
     });
-    return Object.values(groups).map(g => ({ name: g.name, average: g.total / g.count })).sort((a, b) => b.average - a.average).slice(0, 10);
+    
+    return Object.values(groups)
+        .map(g => ({ name: g.name, average: g.total / g.count }))
+        .sort((a, b) => b.average - a.average)
+        .slice(0, 10);
 }
 
 function nextScreen() {
@@ -151,17 +196,17 @@ function renderCurrentScreen() {
     if (screen.type === "insights") {
         container.innerHTML = `
             <div class="ranking-card">
-                <div class="insights-grid" style="grid-template-columns: repeat(2, 1fr); gap: 40px;">
+                <div class="insights-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; height: 100%;">
                     ${screen.cards.map(c => `
-                        <div class="insight-box" style="padding: 60px 20px;">
-                            <div class="insight-icon" style="font-size: 80px;">${c.icon}</div>
-                            <div class="insight-val" style="font-size: 70px;">${c.val}</div>
-                            <div class="insight-label" style="font-size: 22px;">${c.label}</div>
+                        <div class="insight-box" style="padding: 30px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                            <div class="insight-icon" style="font-size: 50px; margin-bottom: 5px;">${c.icon}</div>
+                            <div class="insight-val" style="font-size: 42px; font-weight: 900;">${c.val}</div>
+                            <div class="insight-label" style="font-size: 18px; color: var(--text-muted);">${c.label}</div>
                         </div>
                     `).join("")}
                 </div>
             </div>`;
-    } 
+    }
     else if (screen.type === "promo") {
         container.innerHTML = `
             <div class="ranking-card" style="background: linear-gradient(135deg, #009739 0%, #FEDD00 50%, #009739 100%); border: none; padding: 15px;">
