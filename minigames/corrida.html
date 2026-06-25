@@ -97,27 +97,27 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 15px;
             z-index: 100;
             text-align: center;
         }
 
         .screen-content {
             width: 100%;
-            max-width: 360px;
+            max-width: 380px;
             background: #0f172a;
             border-radius: 16px;
-            padding: 24px;
+            padding: 20px;
             border: 1px solid rgba(255, 255, 255, .1);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .screen-content h2 { margin-bottom: 8px; font-size: 20px; }
-        .screen-content p { color: var(--muted); font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+        .screen-content h2 { margin-bottom: 6px; font-size: 18px; }
+        .screen-content p { color: var(--muted); font-size: 12px; margin-bottom: 8px; line-height: 1.4; }
 
         .rotate-device-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
+            font-size: 40px;
+            margin-bottom: 5px;
             display: inline-block;
         }
 
@@ -137,18 +137,33 @@
 
         .reward-section {
             background: rgba(255, 255, 255, 0.04);
-            padding: 10px;
+            padding: 8px;
             border-radius: 12px;
-            margin: 10px 0;
-            font-size: 13px;
+            margin: 8px 0;
+            font-size: 12px;
             border: 1px dashed rgba(255, 255, 255, 0.1);
         }
 
-        /* CONTAINER DO RANKING DE ALUNOS COM SUPORTE A DUAS LINHAS */
+        /* AJUSTE COMPACTO E FIX DO SCROLL PARA O RANKING DEITADO */
         .ranking-container { 
-            max-height: 130px; 
+            max-height: 25vh; 
             overflow-y: auto; 
-            margin-top: 10px; 
+            margin-top: 8px; 
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch; /* Melhora o scroll por toque no iOS/Android */
+        }
+
+        /* Customização discreta da barra de rolagem para indicar que há mais itens */
+        .ranking-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .ranking-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .ranking-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
         }
 
         .rank-card {
@@ -157,9 +172,9 @@
             justify-content: space-between;
             background: rgba(15, 23, 42, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 8px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             font-size: 12px;
         }
 
@@ -206,13 +221,13 @@
 
         <div id="modal-end" class="screen-overlay hidden">
             <div class="screen-content">
-                <div style="font-size: 35px; margin-bottom: 5px;">💥</div>
+                <div style="font-size: 30px; margin-bottom: 3px;">💥</div>
                 <h2>Impacto Detectado!</h2>
                 <div class="reward-section" id="reward-status">Sincronizando pontos...</div>
                 
                 <div class="ranking-container" id="ranking-container"></div>
 
-                <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
+                <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
                     <button class="action-btn" onclick="resetGame()">Jogar de Novo</button>
                     <button class="action-btn" onclick="goAlbum()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); width: auto;">Álbum</button>
                 </div>
@@ -236,7 +251,6 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Captura as dimensões reais calculadas após a rotação do container
         function resizeCanvas() {
             const container = document.getElementById("game-container");
             canvas.width = container.clientWidth;
@@ -267,10 +281,13 @@
         let skylineOffset = 0;
 
         window.addEventListener("touchstart", (e) => { 
-            if (e.target.tagName !== 'BUTTON') { e.preventDefault(); makeJump(); }
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('.ranking-container')) { 
+                e.preventDefault(); 
+                makeJump(); 
+            }
         }, { passive: false });
         window.addEventListener("mousedown", (e) => {
-            if (e.target.tagName !== 'BUTTON') makeJump();
+            if (e.target.tagName !== 'BUTTON' && !e.target.closest('.ranking-container')) makeJump();
         });
 
         function makeJump() {
