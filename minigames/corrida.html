@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Corrida do Estagiário - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: var(--bg-dark);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(180deg, #070f1e 0%, #0c192c 100%);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: pointer;
+        }
+
+        /* PLACAR ESTILO CHROME */
+        #hud {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            gap: 20px;
+            pointer-events: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        #score-val { color: var(--green); }
+        #speed-val { color: var(--blue); }
+
+        /* OVERLAYS DAS TELAS DE REBOOT/START */
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-width: 360px;
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .screen-content h2 { margin-bottom: 8px; font-size: 20px; }
+        .screen-content p { color: var(--muted); font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+
+        /* ÍCONE INTEGRADO DE ROTACIONAR DISPOSITIVO */
+        .rotate-device-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: rotateLandscape 2s ease-in-out infinite;
+        }
+
+        @keyframes rotateLandscape {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        button.action-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 24px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            background: linear-gradient(180deg, #2563eb, #1d4ed8);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            width: 100%;
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 10px;
+            border-radius: 12px;
+            margin: 10px 0;
+            font-size: 13px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        /* CONTAINER DO RANKING DE ALUNOS COM SUPORTE A DUAS LINHAS */
+        .ranking-container { 
+            max-height: 130px; 
+            overflow-y: auto; 
+            margin-top: 10px; 
+        }
+
+        .rank-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .rank-card.me { 
+            border-color: rgba(34, 197, 94, 0.4); 
+            background: rgba(34, 197, 94, 0.1); 
+        }
+        
+        .rank-card-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            text-align: left;
+        }
+        
+        .rank-position { font-weight: 700; }
+        .rank-score { font-weight: 700; color: var(--yellow); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div id="hud">
+            <div>HI <span id="hi-val" style="color: var(--muted)">0</span></div>
+            <div>PTS <span id="score-val">0</span></div>
+            <div>VEL <span id="speed-val">1x</span></div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div class="rotate-device-icon">📱🔄</div>
+                <h2>Corrida do Estagiário 🏃‍♂️</h2>
+                <p>Você precisa levar as ferramentas para a manutenção urgente! Desvie dos obstáculos.</p>
+                <p><strong>Como Jogar:</strong> Deite o aparelho e toque em qualquer lugar da tela para pular.</p>
+                <p style="color: var(--yellow); font-weight: 600; font-size: 13px;">🎯 Meta Mínima: <span id="min-score-text">1000</span> pontos</p>
+                <button class="action-btn" onclick="startGame()" style="margin-top: 8px;">Começar Corrida</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div style="font-size: 35px; margin-bottom: 5px;">💥</div>
+                <h2>Impacto Detectado!</h2>
+                <div class="reward-section" id="reward-status">Sincronizando pontos...</div>
+                
+                <div class="ranking-container" id="ranking-container"></div>
+
+                <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
+                    <button class="action-btn" onclick="resetGame()">Jogar de Novo</button>
+                    <button class="action-btn" onclick="goAlbum()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); width: auto;">Álbum</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const MIN_SCORE = 1000;
+        document.getElementById("min-score-text").innerText = MIN_SCORE;
+
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "corrida-estagiario";
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        /* CONFIGURAÇÃO DO MOTOR DO RUNNER */
+        let gameActive = false;
+        let score = 0;
+        let hiScore = 0;
+        let gameSpeed = 6.5;
+        const gravity = 0.65;
+        const groundHeight = 70;
+
+        let estagiario = {
+            x: 90,
+            y: 0,
+            size: 42,
+            vy: 0,
+            jumpForce: -13,
+            isJumping: false
+        };
+
+        let obstacles = [];
+        let obstacleTimer = 0;
+        let skylineOffset = 0;
+
+        window.addEventListener("touchstart", (e) => { 
+            if (e.target.tagName !== 'BUTTON') { e.preventDefault(); makeJump(); }
+        }, { passive: false });
+        window.addEventListener("mousedown", (e) => {
+            if (e.target.tagName !== 'BUTTON') makeJump();
+        });
+
+        function makeJump() {
+            if (!gameActive) return;
+            if (!estagiario.isJumping) {
+                estagiario.vy = estagiario.jumpForce;
+                estagiario.isJumping = true;
+            }
+        }
+
+        function startGame() {
+            document.getElementById("modal-start").classList.add("hidden");
+            estagiario.y = canvas.height - groundHeight - estagiario.size;
+            gameActive = true;
+            gameLoop();
+        }
+
+        function resetGame() {
+            document.getElementById("modal-end").classList.add("hidden");
+            score = 0;
+            gameSpeed = 6.5;
+            obstacles = [];
+            obstacleTimer = 0;
+            estagiario.y = canvas.height - groundHeight - estagiario.size;
+            estagiario.vy = 0;
+            estagiario.isJumping = false;
+            gameActive = true;
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const floorY = canvas.height - groundHeight;
+
+            // 1. BACKDROP PRÉDIOS CYBERPUNK (Parallax Suave)
+            skylineOffset -= (gameSpeed * 0.12);
+            if (skylineOffset <= -300) skylineOffset = 0;
+
+            for (let i = 0; i < canvas.width + 300; i += 160) {
+                let currentX = i + (skylineOffset % 160);
+                let bWidth = 90;
+                let bHeight = 150;
+                let bY = floorY - bHeight;
+
+                ctx.fillStyle = "rgba(20, 30, 48, 0.25)";
+                ctx.fillRect(currentX, bY, bWidth, bHeight);
+
+                ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+                ctx.fillRect(currentX, bY, bWidth, 2);
+
+                ctx.fillStyle = "rgba(250, 204, 21, 0.15)";
+                for (let w = 0; w < 3; w++) {
+                    for (let h = 0; h < 5; h++) {
+                        if ((w + h + Math.floor(currentX/15)) % 4 === 0) {
+                            ctx.fillRect(currentX + 15 + (w * 22), bY + 20 + (h * 24), 8, 10);
+                        }
+                    }
+                }
+            }
+
+            // 2. LINHA DO CHÃO
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, floorY);
+            ctx.lineTo(canvas.width, floorY);
+            ctx.stroke();
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+            ctx.fillRect(0, floorY, canvas.width, groundHeight);
+
+            // 3. MOVIMENTAÇÃO DO PERSONAGEM (CORRENDO PARA A DIREITA COM EMOJI VIVO)
+            estagiario.vy += gravity;
+            estagiario.y += estagiario.vy;
+
+            if (estagiario.y >= floorY - estagiario.size) {
+                estagiario.y = floorY - estagiario.size;
+                estagiario.vy = 0;
+                estagiario.isJumping = false;
+            }
+
+            ctx.save();
+            ctx.fillStyle = "#ffffff"; // Previne filtros cromáticos indesejados sobre o emoji
+            ctx.translate(estagiario.x + estagiario.size / 2, estagiario.y + estagiario.size / 2);
+            ctx.scale(-1, 1); // Espelha horizontalmente o corredor
+            ctx.font = `${estagiario.size}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🏃‍♂️", 0, 0);
+            ctx.restore();
+
+            // 4. OBSTÁCULOS NARRATIVOS INDUSTRIAIS
+            obstacleTimer++;
+            let currentSpawnRate = Math.max(42, 75 - Math.floor(score / 25));
+
+            if (obstacleTimer > currentSpawnRate) {
+                let rand = Math.random();
+                let obsEmoji = "📦"; 
+                let obsSize = 34;
+
+                if (rand > 0.7) { obsEmoji = "🚧"; obsSize = 36; } 
+                else if (rand > 0.4) { obsEmoji = "🚩"; obsSize = 32; } 
+
+                obstacles.push({
+                    x: canvas.width,
+                    y: floorY - obsSize,
+                    size: obsSize,
+                    emoji: obsEmoji
+                });
+                obstacleTimer = 0;
+            }
+
+            // 5. MOVIMENTAÇÃO E COLISÕES (OBSTÁCULOS COM CORES VIVAS)
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+
+                ctx.save();
+                ctx.fillStyle = "#ffffff"; // Restaura renderização de cor nativa dos emojis
+                ctx.font = `${obs.size}px sans-serif`;
+                ctx.textAlign = "left";
+                ctx.textBaseline = "top";
+                ctx.fillText(obs.emoji, obs.x, obs.y);
+                ctx.restore();
+
+                if (
+                    estagiario.x + 5 < obs.x + obs.size - 5 &&
+                    estagiario.x + estagiario.size - 4 > obs.x + 5 &&
+                    estagiario.y + 2 < obs.y + obs.size &&
+                    estagiario.y + estagiario.size > obs.y + 2
+                ) {
+                    endGame();
+                    return;
+                }
+
+                if (obs.x + obs.size < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // 6. HUD E ACELERAÇÃO PROGRESSIVA
+            score++;
+            document.getElementById("score-val").innerText = score;
+            
+            gameSpeed = 6.5 + Math.floor(score / 350);
+            document.getElementById("speed-val").innerText = `${(gameSpeed/6.5).toFixed(1)}x`;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        async function endGame() {
+            gameActive = false;
+            if (score > hiScore) {
+                hiScore = score;
+                document.getElementById("hi-val").innerText = hiScore;
+            }
+
+            document.getElementById("modal-end").classList.remove("hidden");
+            const rewardStatus = document.getElementById("reward-status");
+            rewardStatus.innerHTML = "Sincronizando dados com o banco...";
+
+            try {
+                const { data: scores } = await client.from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                let melhorScore = score;
+
+                if (!scores || scores.length === 0) {
+                    await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: score }]);
+                } else {
+                    melhorScore = scores.reduce((max, item) => item.score > max ? item.score : max, scores[0].score);
+                    if (score > melhorScore) {
+                        await client.from("mission_scores").update({ score: score }).eq("player_id", player.id).eq("mission_slug", missionSlug);
+                        melhorScore = score;
+                    }
+                }
+
+                let resHtml = `Sua Pontuação: <b>${score}</b>`;
+
+                const { data: rewards } = await client.from("mission_rewards").select("*").eq("player_id", player.id).eq("mission_slug", missionSlug);
+
+                if (rewards && rewards.length > 0) {
+                    resHtml += `<p style="color:var(--muted); font-size:11px; margin-top:3px;">Recompensa já coletada nesta fase.</p>`;
+                } else if (melhorScore >= MIN_SCORE) {
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
+                    }]);
+                    resHtml += `<p style="color:var(--green); font-weight:700; margin-top:3px;">🎁 Excelente! Você ganhou 1 Pacote de Cartas!</p>`;
+                } else {
+                    resHtml += `<p style="color:var(--muted); font-size:11px; margin-top:3px;">Alcance ${MIN_SCORE} pontos para ganhar o prêmio.</p>`;
+                }
+
+                rewardStatus.innerHTML = resHtml;
+                await fetchLeaderboard();
+
+            } catch (err) {
+                console.error(err);
+                rewardStatus.innerHTML = `Sua Pontuação: <b>${score}</b><p style="color:red; font-size:11px;">Salvo localmente.</p>`;
+            }
+        }
+
+        async function fetchLeaderboard() {
+            const container = document.getElementById("ranking-container");
+            const { data: leaderboard } = await client
+                .from("mission_scores")
+                .select(`score, player_id, players!mission_scores_player_id_fkey (name, emoji, turma_area)`)
+                .eq("mission_slug", missionSlug).order("score", { ascending: false }).limit(5);
+
+            if (!leaderboard) {
+                container.innerHTML = "Placar off-line.";
+                return;
+            }
+
+            container.innerHTML = "";
+            leaderboard.forEach((row, index) => {
+                const p = row.players;
+                const isMe = row.player_id === player.id;
+                container.innerHTML += `
+                    <div class="rank-card ${isMe ? 'me' : ''}">
+                        <div class="rank-card-left">
+                            <span class="rank-position">#${index + 1}</span>
+                            <div>
+                                <span style="display: block; ${isMe ? 'color:var(--green); font-weight:700;' : ''}">
+                                    ${p ? p.emoji : '🏃‍♂️'} ${p ? p.name : 'Operário'} ${isMe ? '(Você)' : ''}
+                                </span>
+                                <span class="rank-sub" style="display: block; font-size: 10px; color: var(--muted); margin-top: 2px;">
+                                    ${p ? p.turma_area : 'Geral'}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="rank-score">${row.score}</span>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+
+</html>

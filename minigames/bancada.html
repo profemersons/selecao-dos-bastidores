@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bancada da Manutenção - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at bottom left, rgba(37, 99, 235, .20), transparent 35%),
+                radial-gradient(circle at top right, rgba(34, 197, 94, .15), transparent 35%),
+                linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%;
+            max-width: 430px;
+            height: 92vh;
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hud-header {
+            padding: 15px;
+            background: var(--card);
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            z-index: 10;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, .05);
+            border-radius: 14px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-box small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        #game-space {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .instruction-container {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        #shelf-outer {
+            flex: 1;
+            position: relative;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+        }
+
+        #shelf-grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 12px;
+            transition: opacity 0.3s ease;
+        }
+
+        .shelf-slot {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .shelf-slot.selectable {
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px dashed rgba(37, 99, 235, 0.4);
+            border-bottom: 5px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .toolbox-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 15px;
+            min-height: 105px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #toolbox-items {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbox-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .toolbox-item.active-selection {
+            background: rgba(37, 99, 235, 0.3);
+            border-color: var(--blue);
+            transform: scale(1.1);
+        }
+
+        button.action-btn {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        #confirm-btn {
+            background: linear-gradient(180deg, #22c55e, #16a34a);
+        }
+
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.96);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-height: 85vh;
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            overflow-y: auto;
+        }
+
+        .screen-content h2 { margin-bottom: 10px; font-size: 22px; }
+        .screen-content p { color: var(--muted); font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .ranking-container { max-height: 180px; overflow-y: auto; margin-top: 15px; }
+
+        .rank-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .rank-card-left { display: flex; align-items: center; gap: 10px; }
+        .rank-position { font-weight: 700; min-width: 25px; }
+        .rank-sub { display: block; font-size: 11px; color: var(--muted); }
+        .rank-score { font-weight: 700; }
+
+        .pos-1 .rank-position { color: var(--yellow); }
+        .pos-2 .rank-position { color: #e2e8f0; }
+        .pos-3 .rank-position { color: #cd7f32; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div class="hud-header">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <small>PONTOS</small>
+                    <span id="score-txt" style="color: var(--green);">0</span>
+                </div>
+                <div class="stat-box">
+                    <small>RODADA</small>
+                    <span id="round-txt" style="color: var(--blue);">1</span>
+                </div>
+                <div class="stat-box">
+                    <small>TEMPO</small>
+                    <span id="time-txt" style="color: #ef4444;">90s</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-space">
+            <div class="instruction-container" id="status-banner" style="color: var(--yellow);">
+                DECORE A BANCADA!
+            </div>
+
+            <div id="shelf-outer">
+                <div id="shelf-grid"></div>
+            </div>
+
+            <div class="toolbox-section">
+                <div id="toolbox-items"></div>
+                <button id="confirm-btn" class="action-btn hidden" onclick="validateRound()">Confirmar Estrutura</button>
+            </div>
+        </div>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 12px;">🔧</div>
+                <h2>Bancada da Manutenção</h2>
+                <p>Memorize as posições das ferramentas na prateleira antes que elas sumam!</p>
+                <p><strong>Como Jogar:</strong> Toque em uma ferramenta na caixa inferior e depois toque na prateleira vazia onde quer posicioná-la. Clique em Confirmar no fim.</p>
+                <p>🎯 <b>Bônus Extra:</b> Complete uma rodada sem erros e ganhe <b>+20 pontos de combo!</b></p>
+                <p><strong>Meta mínima:</strong> <span id="min-score-text" style="color: var(--yellow); font-weight: 700;">180</span> pontos</p>
+                <button class="action-btn" onclick="startGame()">Começar Turno</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div style="font-size: 45px; margin-bottom: 10px;">🏆</div>
+                <h2>Fim do Turno!</h2>
+                <div class="reward-section" id="reward-status">Computando tabelas...</div>
+                
+                <h3 style="text-align: left; margin-top: 15px; font-size: 14px; color: var(--muted);">📊 Mestres da Manutenção</h3>
+                <div class="ranking-container" id="ranking-container"></div>
+
+                <button class="action-btn" onclick="location.reload()">Jogar Novamente</button>
+                <button class="action-btn" onclick="goAlbum()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); margin-top: 8px;">Voltar ao Álbum</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const MIN_SCORE = 180;
+        document.getElementById("min-score-text").innerText = MIN_SCORE;
+
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "bancada";
+        const emojisOnly = ['🔨', '🔧', '🥽', '🧤', '🥾', '🪓', '🔩'];
+
+        /* ESTADO DO MOTOR */
+        let score = 0;
+        let gameTimeLeft = 90; 
+        let currentRound = 1;
+        let gameActive = false;
+        let isPlacementPhase = false;
+        
+        let originalBoard = [null, null, null, null, null, null, null, null, null];
+        let playerBoard = [null, null, null, null, null, null, null, null, null];
+        let selectedEmoji = null;
+        let loopTimer;
+
+        const shelfGrid = document.getElementById('shelf-grid');
+        const toolboxItems = document.getElementById('toolbox-items');
+        const statusBanner = document.getElementById('status-banner');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const scoreTxt = document.getElementById('score-txt');
+        const roundTxt = document.getElementById('round-txt');
+        const timeTxt = document.getElementById('time-txt');
+
+        function generateGridDOM() {
+            shelfGrid.innerHTML = "";
+            for (let i = 0; i < 9; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'shelf-slot';
+                slot.dataset.index = i;
+                slot.onclick = () => handleSlotClick(i);
+                shelfGrid.appendChild(slot);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('modal-start').classList.add('hidden');
+            score = 0;
+            gameTimeLeft = 90;
+            currentRound = 1;
+            gameActive = true;
+            
+            scoreTxt.innerText = score;
+            roundTxt.innerText = currentRound;
+            timeTxt.innerText = `${gameTimeLeft}s`;
+
+            generateGridDOM();
+            startNewRound();
+            loopTimer = setInterval(() => {
+                gameTimeLeft--;
+                timeTxt.innerText = `${gameTimeLeft}s`;
+                if (gameTimeLeft <= 0) {
+                    clearInterval(loopTimer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function startNewRound() {
+            if (!gameActive) return;
+            
+            isPlacementPhase = false;
+            roundTxt.innerText = currentRound;
+            selectedEmoji = null;
+
+            for (let i = 0; i < 9; i++) {
+                originalBoard[i] = null;
+                playerBoard[i] = null;
+            }
+
+            toolboxItems.innerHTML = "";
+            confirmBtn.classList.add('hidden');
+
+            const slots = shelfGrid.children;
+            for(let i=0; i<9; i++) {
+                slots[i].innerText = "";
+                slots[i].className = 'shelf-slot';
+                slots[i].style.background = "rgba(255, 255, 255, 0.02)";
+                slots[i].style.border = "none";
+                slots[i].style.borderBottom = "5px solid rgba(255, 255, 255, 0.15)";
+            }
+
+            const itemCount = Math.min(3 + Math.floor((currentRound - 1) / 2), 5);
+
+            let pool = [...emojisOnly].sort(() => Math.random() - 0.5);
+            let roundItems = pool.slice(0, itemCount);
+
+            let availableIndexes = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(() => Math.random() - 0.5);
+            roundItems.forEach(item => {
+                const idx = availableIndexes.pop();
+                originalBoard[idx] = item;
+            });
+
+            for(let i=0; i<9; i++) {
+                if (originalBoard[i]) slots[i].innerText = originalBoard[i];
+            }
+
+            statusBanner.innerText = "🧠 DECORE A BANCADA!";
+            statusBanner.style.color = "var(--yellow)";
+            shelfGrid.style.opacity = "1";
+
+            setTimeout(hideAndPrepareSelectionBox, 4000);
+        }
+
+        function hideAndPrepareSelectionBox() {
+            if (!gameActive) return;
+
+            shelfGrid.style.opacity = "0";
+
+            setTimeout(() => {
+                const slots = shelfGrid.children;
+                for(let i=0; i<9; i++) {
+                    slots[i].innerText = "";
+                    slots[i].classList.add('selectable');
+                }
+
+                statusBanner.innerText = "🖐️ SELECIONE E POSICIONE!";
+                statusBanner.style.color = "var(--blue)";
+                isPlacementPhase = true;
+
+                let activeTools = originalBoard.filter(el => el !== null).sort(() => Math.random() - 0.5);
+                activeTools.forEach(emoji => {
+                    const box = document.createElement('div');
+                    box.className = 'toolbox-item';
+                    box.innerText = emoji;
+                    box.onclick = () => handleToolboxSelect(box, emoji);
+                    toolboxItems.appendChild(box);
+                });
+
+                shelfGrid.style.opacity = "1";
+            }, 300);
+        }
+
+        function handleToolboxSelect(element, emoji) {
+            if (!isPlacementPhase) return;
+
+            document.querySelectorAll('.toolbox-item').forEach(el => el.classList.remove('active-selection'));
+            
+            if (selectedEmoji === emoji) {
+                selectedEmoji = null;
+                return;
+            }
+
+            selectedEmoji = emoji;
+            element.classList.add('active-selection');
+        }
+
+        function handleSlotClick(slotIndex) {
+            if (!isPlacementPhase) return;
+
+            if (playerBoard[slotIndex] && !selectedEmoji) {
+                const removido = playerBoard[slotIndex];
+                playerBoard[slotIndex] = null;
+                shelfGrid.children[slotIndex].innerText = "";
+
+                const box = document.createElement('div');
+                box.className = 'toolbox-item';
+                box.innerText = removido;
+                box.onclick = () => handleToolboxSelect(box, removido);
+                toolboxItems.appendChild(box);
+
+                checkConfirmButtonState();
+                return;
+            }
+
+            if (selectedEmoji && !playerBoard[slotIndex]) {
+                playerBoard[slotIndex] = selectedEmoji;
+                shelfGrid.children[slotIndex].innerText = selectedEmoji;
+
+                const activeEl = document.querySelector('.toolbox-item.active-selection');
+                if (activeEl) activeEl.remove();
+
+                selectedEmoji = null;
+                checkConfirmButtonState();
+            }
+        }
+
+        function checkConfirmButtonState() {
+            if (toolboxItems.children.length === 0) {
+                confirmBtn.classList.remove('hidden');
+            } else {
+                confirmBtn.classList.add('hidden');
+            }
+        }
+
+        function validateRound() {
+            isPlacementPhase = false;
+            confirmBtn.classList.add('hidden');
+            statusBanner.innerText = "🔍 AVALIANDO ORGANIZAÇÃO...";
+            statusBanner.style.color = "var(--text)";
+
+            const slots = shelfGrid.children;
+            let roundPoints = 0;
+            let totalItemsInRound = 0;
+            let correctCount = 0;
+
+            for(let i=0; i<9; i++) {
+                if(originalBoard[i] !== null) totalItemsInRound++;
+            }
+
+            for (let i = 0; i < 9; i++) {
+                const correto = originalBoard[i];
+                const doJogador = playerBoard[i];
+                
+                slots[i].classList.remove('selectable');
+
+                if (correto !== null) {
+                    slots[i].innerText = correto; 
+                    
+                    if (doJogador === correto) {
+                        slots[i].style.background = "rgba(34, 197, 94, 0.2)";
+                        slots[i].style.border = "2px solid var(--green)";
+                        roundPoints += 20; 
+                        correctCount++;
+                    } else {
+                        slots[i].style.background = "rgba(239, 68, 68, 0.2)";
+                        slots[i].style.border = "2px solid #ef4444";
+                    }
+                } else {
+                    if (doJogador !== null) {
+                        slots[i].innerText = doJogador;
+                        slots[i].style.background = "rgba(239, 68, 68, 0.2)";
+                        slots[i].style.border = "2px solid #ef4444";
+                    } else {
+                        slots[i].innerText = "";
+                    }
+                }
+            }
+
+            if (correctCount === totalItemsInRound && totalItemsInRound > 0) {
+                roundPoints += 20;
+                statusBanner.innerText = "🔥 COMBO DE MANUTENÇÃO! (+20 BÔNUS)";
+                statusBanner.style.color = "var(--yellow)";
+            }
+
+            score += roundPoints;
+            scoreTxt.innerText = score;
+            currentRound++;
+
+            setTimeout(() => {
+                if (gameActive) startNewRound();
+            }, 2500);
+        }
+
+        /* GRAVAÇÃO IMEDIATA E SEM INTERRUPÇÕES DOS BANCOS */
+        async function endGame() {
+            gameActive = false;
+            clearInterval(loopTimer);
+            document.getElementById('modal-end').classList.remove('hidden');
+            
+            const rewardStatus = document.getElementById('reward-status');
+            rewardStatus.innerHTML = "🔧 Sincronizando ferramentas...";
+
+            try {
+                // 1. Gravação direta em mission_scores
+                const { data: scores } = await client.from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                let melhorScore = score;
+
+                if (!scores || scores.length === 0) {
+                    await client.from("mission_scores").insert([{ 
+                        player_id: player.id, 
+                        mission_slug: missionSlug, 
+                        score: score 
+                    }]);
+                } else {
+                    melhorScore = scores.reduce((max, item) => item.score > max ? item.score : max, scores[0].score);
+                    if (score > melhorScore) {
+                        await client.from("mission_scores")
+                            .update({ score: score })
+                            .eq("player_id", player.id)
+                            .eq("mission_slug", missionSlug);
+                        melhorScore = score;
+                    }
+                }
+
+                let resHtml = `Sua Pontuação Total: <b>${score}</b>`;
+
+                // 2. Verificação/Gravação direta em mission_rewards
+                const { data: rewards } = await client.from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (rewards && rewards.length > 0) {
+                    resHtml += `<p style="color:var(--muted); font-size:12px; margin-top:5px;">Pacote já garantido nesta bancada.</p>`;
+                } else if (melhorScore >= MIN_SCORE) {
+                    // Executa a inserção explícita do prêmio destravado
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, 
+                        mission_slug: missionSlug, 
+                        reward_type: "pack", 
+                        reward_value: 1, 
+                        unlocked: true, 
+                        claimed: false 
+                    }]);
+                    resHtml += `<p style="color:var(--green); font-weight:700; margin-top:5px;">🎁 Organização Perfeita! Pacote de Cartas Liberado!</p>`;
+                } else {
+                    resHtml += `<p style="color:#ef4444; font-size:12px; margin-top:5px;">Meta de ${MIN_SCORE} pontos não atingida.</p>`;
+                }
+
+                rewardStatus.innerHTML = resHtml;
+                
+                // Atualiza o quadro de líderes
+                await fetchLeaderboard();
+
+            } catch (err) {
+                console.error("Erro na comunicação com o Supabase:", err);
+                rewardStatus.innerHTML = `Sua Pontuação: <b>${score}</b><p style="color:#ef4444; font-size:11px;">Erro ao salvar pontos no servidor.</p>`;
+            }
+        }
+
+        async function fetchLeaderboard() {
+            const container = document.getElementById('ranking-container');
+            const { data: leaderboard, error } = await client
+                .from("mission_scores")
+                .select(`score, player_id, players!mission_scores_player_id_fkey (name, emoji, turma_area)`)
+                .eq("mission_slug", missionSlug)
+                .order("score", { ascending: false })
+                .limit(10);
+
+            if (error || !leaderboard) {
+                container.innerHTML = "<div style='color:var(--muted); font-size:12px;'>Ranking temporariamente indisponível.</div>";
+                return;
+            }
+
+            container.innerHTML = "";
+            leaderboard.forEach((row, index) => {
+                const p = row.players;
+                const isMe = row.player_id === player.id;
+                let classePos = (index + 1) <= 3 ? `pos-${index + 1}` : '';
+
+                container.innerHTML += `
+                    <div class="rank-card ${classePos}" style="${isMe ? 'background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.25);' : ''}">
+                        <div class="rank-card-left">
+                            <span class="rank-position">#${index + 1}</span>
+                            <div>
+                                <span class="rank-name" style="${isMe ? 'font-weight:700; color:var(--green);' : ''}">
+                                    ${p ? p.emoji : '🔧'} ${p ? p.name : 'Jogador'} ${isMe ? '(Você)' : ''}
+                                </span>
+                                <span class="rank-sub">${p ? p.turma_area : 'Geral'}</span>
+                            </div>
+                        </div>
+                        <span class="rank-score" style="${isMe ? 'color:var(--green);' : ''}">${row.score}</span>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+
+</html>

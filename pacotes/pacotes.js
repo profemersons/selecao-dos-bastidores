@@ -232,7 +232,7 @@ function getGameDayStart() {
 async function loadMissionPacks() {
     const container = document.getElementById("missionPacks");
     if (!container) return;
-    
+
     container.innerHTML = "";
 
     // Garantia de conversão de tipo para o ID do jogador
@@ -266,12 +266,12 @@ async function loadMissionPacks() {
     // 2. Renderiza os cards baseados nas linhas existentes com personalização por slug
     userRewards.forEach(registro => {
         const packCard = document.createElement("div");
-        
+
         // Configuração padrão caso venha um slug mapeado diferente
         let nomeMissao = "Pacote de Missão";
         let emojiMissao = "🎯";
 
-// Personalização dinâmica baseada no mission_slug
+        // Personalização dinâmica baseada no mission_slug
         switch (registro.mission_slug) {
             case "embaixadinhas":
                 nomeMissao = "Missão Embaixadinha";
@@ -292,6 +292,22 @@ async function loadMissionPacks() {
             case "amigos1":
                 nomeMissao = "Missão Rede de Amigos";
                 emojiMissao = "🤝";
+                break;
+            case "lanche-estadio":
+                nomeMissao = "Missão Lanchonete do Estádio";
+                emojiMissao = "🍔";
+                break;
+            case "bancada":
+                nomeMissao = "Missão Bancada Organizada";
+                emojiMissao = "👨‍🏭";
+                break;
+            case "corrida-estagiario":
+                nomeMissao = "Missão Corrida do Estagiário";
+                emojiMissao = "🏃‍♀️";
+                break;
+            case "cade-profissional":
+                nomeMissao = "Onde está o Craque?";
+                emojiMissao = "🔍";
                 break;
             default:
                 // Fallback amigável caso tenha algum outro slug no banco futuramente
