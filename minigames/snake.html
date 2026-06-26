@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Corrida FOCADA - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: var(--bg-dark);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #0f172a;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #111827;
+        }
+
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        #score-val { color: var(--yellow); }
+        #hi-val { color: var(--muted); }
+
+        /* OVERLAYS */
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.97);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-width: 360px;
+            background: #0f172a;
+            border-radius: 24px;
+            padding: 25px 20px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        }
+
+        .screen-content h2 { margin-bottom: 8px; font-size: 22px; font-weight: 700; }
+        .screen-content p { color: var(--muted); font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+
+        .game-icon { font-size: 48px; margin-bottom: 8px; display: inline-block; }
+
+        button.action-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            background: linear-gradient(180deg, #2563eb, #1d4ed8);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            width: 100%;
+        }
+
+        .alert-box {
+            background: rgba(37, 99, 235, 0.08);
+            padding: 12px;
+            border-radius: 14px;
+            margin: 12px 0;
+            font-size: 12px;
+            border: 1px dashed var(--blue);
+            color: #a3c2ff;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            border-radius: 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ranking-container {
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            padding: 10px;
+            max-height: 170px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ranking-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--yellow);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .ranking-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ranking-row.podium {
+            background: rgba(250, 204, 21, 0.08);
+            font-weight: 600;
+        }
+
+        .ranking-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .ranking-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
+        .ranking-tag {
+            font-size: 9px;
+            background: rgba(255,255,255,0.1);
+            padding: 1px 4px;
+            border-radius: 4px;
+            color: var(--muted);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div id="hud">
+            <div>CURRÍCULO: <span id="score-val">0</span></div>
+            <div>RECORDE: <span id="hi-val">0</span></div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div class="game-icon">🐍🎓</div>
+                <h2>Serpente da Carreira</h2>
+                <p>Construa sua jornada profissional! Colete os certificados e diplomas pelo mapa para expandir seu conhecimento.</p>
+                
+                <div class="alert-box">
+                    <strong>⚡ CONTROLES:</strong><br>
+                    Deslize o dedo na tela (para cima, baixo, esquerda ou direita) para direcionar o rastro do estudante.
+                </div>
+
+                <p style="color: var(--yellow); font-weight: 600; font-size: 13px; margin-bottom: 10px;">🎯 Meta: Alcançar <span id="min-score-text">150</span> pontos</p>
+                <button class="action-btn" onclick="startGame()">Iniciar Carreira</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div id="end-icon" style="font-size: 40px; margin-bottom: 3px;">📉</div>
+                <h2 id="end-title">Carreira Interrompida!</h2>
+                <div class="reward-section" id="reward-status">Sincronizando dados...</div>
+                
+                <div class="ranking-container">
+                    <div class="ranking-title">🏆 TOP 10 - CURRÍCULOS</div>
+                    <div id="ranking-list">
+                        <p style="font-size:11px; color:var(--muted)">Carregando classificação...</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 8px;">
+                    <button class="action-btn" onclick="resetGame()">Recomeçar</button>
+                    <button class="action-btn" onclick="goAlbum()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); width: auto;">Álbum</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const MIN_SCORE = 100;
+        document.getElementById("min-score-text").innerText = MIN_SCORE;
+
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "snake-profissao";
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Configuração do Grid Responsivo
+        const gridSize = 22; 
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let gameActive = false;
+        let score = 0;
+        let hiScore = 0;
+
+        let snake = [];
+        let itemX = 0;
+        let itemY = 0;
+        let itemEmoji = "🎓";
+        
+        let dx = gridSize;
+        let dy = 0;
+        
+        let gameInterval = null;
+        const baseSpeed = 130; 
+
+        const emojisProfissao = ["🎓", "💼", "📜", "💻", "🔬", "📊", "🔧", "🎨"];
+
+        // CAPTURA DE ARRASTES (SWIPE TO TOUCH COORD)
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        window.addEventListener("touchstart", (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener("touchend", (e) => {
+            if (!gameActive || e.target.tagName === 'BUTTON') return;
+            
+            const diffX = e.changedTouches[0].clientX - touchStartX;
+            const diffY = e.changedTouches[0].clientY - touchStartY;
+            
+            // Verifica se o movimento foi longo o suficiente para ser considerado swipe
+            if (Math.max(Math.abs(diffX), Math.abs(diffY)) < 25) return;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                // Swipe Horizontal
+                if (diffX > 0 && dx === 0) { dx = gridSize; dy = 0; }
+                else if (diffX < 0 && dx === 0) { dx = -gridSize; dy = 0; }
+            } else {
+                // Swipe Vertical
+                if (diffY > 0 && dy === 0) { dx = 0; dy = gridSize; }
+                else if (diffY < 0 && dy === 0) { dx = 0; dy = -gridSize; }
+            }
+        }, { passive: true });
+
+        // Teclado (Fácil teste em PC)
+        window.addEventListener("keydown", (e) => {
+            if (!gameActive) return;
+            if ((e.key === "ArrowUp" || e.key === "w") && dy === 0) { dx = 0; dy = -gridSize; }
+            if ((e.key === "ArrowDown" || e.key === "s") && dy === 0) { dx = 0; dy = gridSize; }
+            if ((e.key === "ArrowLeft" || e.key === "a") && dx === 0) { dx = -gridSize; dy = 0; }
+            if ((e.key === "ArrowRight" || e.key === "d") && dx === 0) { dx = gridSize; dy = 0; }
+        });
+
+        function spawnItem() {
+            const cols = Math.floor(canvas.width / gridSize);
+            const rows = Math.floor(canvas.height / gridSize);
+            
+            itemX = Math.floor(Math.random() * (cols - 2) + 1) * gridSize;
+            itemY = Math.floor(Math.random() * (rows - 2) + 1) * gridSize;
+            
+            itemEmoji = emojisProfissao[Math.floor(Math.random() * emojisProfissao.length)];
+        }
+
+        function startGame() {
+            document.getElementById("modal-start").classList.add("hidden");
+            resetGameVariables();
+        }
+
+        function resetGame() {
+            document.getElementById("modal-end").classList.add("hidden");
+            resetGameVariables();
+        }
+
+        function resetGameVariables() {
+            score = 0;
+            document.getElementById("score-val").innerText = score;
+            
+            // Centraliza o início da cobrinha de forma segura
+            const midX = Math.floor((canvas.width / 2) / gridSize) * gridSize;
+            const midY = Math.floor((canvas.height / 2) / gridSize) * gridSize;
+
+            snake = [
+                { x: midX, y: midY },
+                { x: midX - gridSize, y: midY },
+                { x: midX - (gridSize * 2), y: midY }
+            ];
+
+            dx = gridSize;
+            dy = 0;
+            
+            spawnItem();
+            gameActive = true;
+
+            if(gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(update, baseSpeed);
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            // Colisão com o item
+            if (Math.abs(head.x - itemX) < gridSize && Math.abs(head.y - itemY) < gridSize) {
+                score += 10;
+                document.getElementById("score-val").innerText = score;
+                spawnItem();
+                
+                clearInterval(gameInterval);
+                const nextSpeed = Math.max(baseSpeed - Math.floor(score / 15), 70);
+                gameInterval = setInterval(update, nextSpeed);
+            } else {
+                snake.pop(); 
+            }
+
+            // Colisões nas Bordas da Tela Inteira
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                endGame();
+                return;
+            }
+
+            // Colisão Corpo
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    endGame();
+                    return;
+                }
+            }
+
+            render();
+        }
+
+        function render() {
+            ctx.fillStyle = "#111827";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grade sutil de fundo
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.012)";
+            for (let i = 0; i < canvas.width; i += gridSize) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let j = 0; j < canvas.height; j += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+            }
+
+            // Desenhar Corpo da Serpente (Estudante Neon)
+            snake.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? "#2563eb" : "#3b82f6";
+                ctx.fillRect(part.x + 1, part.y + 1, gridSize - 2, gridSize - 2);
+                
+                if(index === 0) { 
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(part.x + 4, part.y + 4, 3, 3);
+                    ctx.fillRect(part.x + 11, part.y + 4, 3, 3);
+                }
+            });
+
+            // Desenhar Item Coletável (Emoji)
+            ctx.save();
+            ctx.font = `${gridSize - 2}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(itemEmoji, itemX + gridSize / 2, itemY + gridSize / 2);
+            ctx.restore();
+        }
+
+        async function endGame() {
+            gameActive = false;
+            clearInterval(gameInterval);
+
+            if (score > hiScore) {
+                hiScore = score;
+                document.getElementById("hi-val").innerText = hiScore;
+            }
+
+            document.getElementById("modal-end").classList.remove("hidden");
+            const rewardStatus = document.getElementById("reward-status");
+            const rankingList = document.getElementById("ranking-list");
+            
+            rewardStatus.innerHTML = "Atualizando currículo...";
+            rankingList.innerHTML = "<p style='font-size:11px; color:var(--muted)'>Buscando classificação geral...</p>";
+
+            try {
+                const { data: scores } = await client.from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                let melhorScore = score;
+
+                if (!scores || scores.length === 0) {
+                    await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: score }]);
+                } else {
+                    melhorScore = scores.reduce((max, item) => item.score > max ? item.score : max, scores[0].score);
+                    if (score > melhorScore) {
+                        await client.from("mission_scores").update({ score: score }).eq("player_id", player.id).eq("mission_slug", missionSlug);
+                        melhorScore = score;
+                    }
+                }
+
+                let textHtml = `Pontuação final: <b>${score} pts</b>`;
+
+                const { data: rewards } = await client.from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (rewards && rewards.length > 0) {
+                    textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">🎁 Recompensa desta trilha já conquistada!</p>`;
+                } else if (melhorScore >= MIN_SCORE) {
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
+                    }]);
+                    textHtml += `<p style="color:var(--green); font-weight:700; margin-top:4px;">🎉 Fantástico! Você formou seu currículo e liberou 1 Pacote de Cartas!</p>`;
+                } else {
+                    textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">Almeje ${MIN_SCORE} pontos para coletar seu pacote.</p>`;
+                }
+                rewardStatus.innerHTML = textHtml;
+
+                const { data: leaderboard } = await client.from("mission_scores")
+                    .select("score, player_id, players(name, emoji, turma_area)")
+                    .eq("mission_slug", missionSlug)
+                    .order("score", { ascending: false })
+                    .limit(10);
+
+                if (leaderboard && leaderboard.length > 0) {
+                    rankingList.innerHTML = ""; 
+                    
+                    leaderboard.forEach((item, index) => {
+                        const isMainPlayer = item.player_id === player.id;
+                        const row = document.createElement("div");
+                        row.className = `ranking-row ${index < 3 ? 'podium' : ''}`;
+                        if(isMainPlayer) row.style.border = "1px solid var(--yellow)";
+
+                        let positionIndicator = `${index + 1}º`;
+                        if(index === 0) positionIndicator = "🥇";
+                        if(index === 1) positionIndicator = "🥈";
+                        if(index === 2) positionIndicator = "🥉";
+
+                        let userObj = item.players || {};
+                        let userEmoji = userObj.emoji || "👨‍🎓";
+                        let userName = userObj.name || "Competidor";
+                        let userTurma = userObj.turma_area || "Copa";
+
+                        row.innerHTML = `
+                            <div class="ranking-left">
+                                <span style="font-weight:600">${positionIndicator}</span>
+                                <span>${userEmoji}</span>
+                                <span class="ranking-name">${userName} ${isMainPlayer ? '(Você)' : ''}</span>
+                                <span class="ranking-tag">${userTurma}</span>
+                            </div>
+                            <span style="color:var(--yellow); font-weight:600">${item.score}</span>
+                        `;
+                        rankingList.appendChild(row);
+                    });
+                } else {
+                    rankingList.innerHTML = "<p style='font-size:11px; color:var(--muted)'>Nenhum líder registrado ainda.</p>";
+                }
+
+            } catch (err) {
+                console.error(err);
+                rewardStatus.innerHTML = `Pontuação: <b>${score}</b><p style="color:red; font-size:11px; margin-top:4px;">Conexão pendente com o banco.</p>`;
+            }
+        }
+    </script>
+</body>
+
+</html>
