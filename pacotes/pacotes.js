@@ -291,13 +291,21 @@ async function loadMissionPacks() {
                 nomeMissao = "Missão Corrida do Estagiário";
                 emojiMissao = "🏃‍♀️";
                 break;
-            case "cade-profissional":
-                nomeMissao = "Onde está o Craque?";
-                emojiMissao = "🔍";
-                break;
             case "qrcode1":
                 nomeMissao = "Missão Brasil Campeão";
                 emojiMissao = "🔰";
+                break;
+            case "cade-profissional":
+                nomeMissao = "Onde está o Profissional?";
+                emojiMissao = "🔍";
+                break;
+            case "quarto-andar":
+                nomeMissao = "Missão Retorno do Intervalo";
+                emojiMissao = "🏃‍♂️";
+                break;
+            case "snake-profissao":
+                nomeMissao = "Missão Serpente da Carreira";
+                emojiMissao = "🐍";
                 break;
             default:
                 if (registro.mission_slug) {
