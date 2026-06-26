@@ -70,7 +70,6 @@
         #score-val { color: var(--yellow); }
         #hi-val { color: var(--muted); }
 
-        /* OVERLAYS */
         .screen-overlay {
             position: absolute;
             inset: 0;
@@ -211,10 +210,10 @@
                 
                 <div class="alert-box">
                     <strong>⚡ CONTROLES:</strong><br>
-                    Deslize o dedo na tela (para cima, baixo, esquerda ou direita) para direcionar o rastro do estudante.
+                    Deslize o dedo na tela em qualquer direção para guiar o rastro do estudante.
                 </div>
 
-                <p style="color: var(--yellow); font-weight: 600; font-size: 13px; margin-bottom: 10px;">🎯 Meta: Alcançar <span id="min-score-text">150</span> pontos</p>
+                <p style="color: var(--yellow); font-weight: 600; font-size: 13px; margin-bottom: 10px;">🎯 Meta: Alcançar <span id="min-score-text">100</span> pontos</p>
                 <button class="action-btn" onclick="startGame()">Iniciar Carreira</button>
             </div>
         </div>
@@ -256,8 +255,7 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Configuração do Grid Responsivo
-        const gridSize = 22; 
+        const gridSize = 24; // Tamanho ideal para toque e visualização mobile
         
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -279,11 +277,10 @@
         let dy = 0;
         
         let gameInterval = null;
-        const baseSpeed = 130; 
+        const baseSpeed = 135; 
 
         const emojisProfissao = ["🎓", "💼", "📜", "💻", "🔬", "📊", "🔧", "🎨"];
 
-        // CAPTURA DE ARRASTES (SWIPE TO TOUCH COORD)
         let touchStartX = 0;
         let touchStartY = 0;
 
@@ -299,21 +296,17 @@
             const diffX = e.changedTouches[0].clientX - touchStartX;
             const diffY = e.changedTouches[0].clientY - touchStartY;
             
-            // Verifica se o movimento foi longo o suficiente para ser considerado swipe
-            if (Math.max(Math.abs(diffX), Math.abs(diffY)) < 25) return;
+            if (Math.max(Math.abs(diffX), Math.abs(diffY)) < 20) return;
 
             if (Math.abs(diffX) > Math.abs(diffY)) {
-                // Swipe Horizontal
                 if (diffX > 0 && dx === 0) { dx = gridSize; dy = 0; }
                 else if (diffX < 0 && dx === 0) { dx = -gridSize; dy = 0; }
             } else {
-                // Swipe Vertical
                 if (diffY > 0 && dy === 0) { dx = 0; dy = gridSize; }
                 else if (diffY < 0 && dy === 0) { dx = 0; dy = -gridSize; }
             }
         }, { passive: true });
 
-        // Teclado (Fácil teste em PC)
         window.addEventListener("keydown", (e) => {
             if (!gameActive) return;
             if ((e.key === "ArrowUp" || e.key === "w") && dy === 0) { dx = 0; dy = -gridSize; }
@@ -322,12 +315,28 @@
             if ((e.key === "ArrowRight" || e.key === "d") && dx === 0) { dx = gridSize; dy = 0; }
         });
 
+        // SPAWN CORRIGIDO CONTRA ESTOURO E EM CIMA DA COBRA
         function spawnItem() {
-            const cols = Math.floor(canvas.width / gridSize);
-            const rows = Math.floor(canvas.height / gridSize);
+            // Define colunas e linhas máximas seguras descontando a última linha/coluna incompleta
+            const maxCols = Math.floor(canvas.width / gridSize) - 1;
+            const maxRows = Math.floor(canvas.height / gridSize) - 1;
             
-            itemX = Math.floor(Math.random() * (cols - 2) + 1) * gridSize;
-            itemY = Math.floor(Math.random() * (rows - 2) + 1) * gridSize;
+            let validPosition = false;
+
+            while (!validPosition) {
+                // Sorteia entre a coluna 1 e a penúltima (evita as colas absolutas de borda)
+                itemX = Math.floor(Math.random() * (maxCols - 1) + 1) * gridSize;
+                itemY = Math.floor(Math.random() * (maxRows - 1) + 1) * gridSize;
+
+                // Checa se bateu em alguma parte do corpo da cobra
+                validPosition = true;
+                for (let i = 0; i < snake.length; i++) {
+                    if (snake[i].x === itemX && snake[i].y === itemY) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+            }
             
             itemEmoji = emojisProfissao[Math.floor(Math.random() * emojisProfissao.length)];
         }
@@ -346,7 +355,7 @@
             score = 0;
             document.getElementById("score-val").innerText = score;
             
-            // Centraliza o início da cobrinha de forma segura
+            // Centraliza o início de forma alinhada ao grid
             const midX = Math.floor((canvas.width / 2) / gridSize) * gridSize;
             const midY = Math.floor((canvas.height / 2) / gridSize) * gridSize;
 
@@ -370,33 +379,34 @@
             if (!gameActive) return;
 
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-            snake.unshift(head);
 
-            // Colisão com o item
-            if (Math.abs(head.x - itemX) < gridSize && Math.abs(head.y - itemY) < gridSize) {
-                score += 10;
-                document.getElementById("score-val").innerText = score;
-                spawnItem();
-                
-                clearInterval(gameInterval);
-                const nextSpeed = Math.max(baseSpeed - Math.floor(score / 15), 70);
-                gameInterval = setInterval(update, nextSpeed);
-            } else {
-                snake.pop(); 
-            }
-
-            // Colisões nas Bordas da Tela Inteira
+            // Colisões nas Bordas Reais da Tela
             if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
                 endGame();
                 return;
             }
 
-            // Colisão Corpo
-            for (let i = 1; i < snake.length; i++) {
+            // Colisão Corpo (Verifica antes de mover para evitar overlap visual)
+            for (let i = 0; i < snake.length; i++) {
                 if (head.x === snake[i].x && head.y === snake[i].y) {
                     endGame();
                     return;
                 }
+            }
+
+            snake.unshift(head);
+
+            // Verificação de colisão exata por Grid com o item
+            if (head.x === itemX && head.y === itemY) {
+                score += 10;
+                document.getElementById("score-val").innerText = score;
+                spawnItem();
+                
+                clearInterval(gameInterval);
+                const nextSpeed = Math.max(baseSpeed - Math.floor(score / 12), 65);
+                gameInterval = setInterval(update, nextSpeed);
+            } else {
+                snake.pop(); 
             }
 
             render();
@@ -406,16 +416,12 @@
             ctx.fillStyle = "#111827";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Grade sutil de fundo
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.012)";
-            for (let i = 0; i < canvas.width; i += gridSize) {
-                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-            }
-            for (let j = 0; j < canvas.height; j += gridSize) {
-                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
-            }
+            // Linha limítrofe sutil de aviso de parede
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-            // Desenhar Corpo da Serpente (Estudante Neon)
+            // Desenhar Corpo da Serpente
             snake.forEach((part, index) => {
                 ctx.fillStyle = index === 0 ? "#2563eb" : "#3b82f6";
                 ctx.fillRect(part.x + 1, part.y + 1, gridSize - 2, gridSize - 2);
@@ -423,13 +429,13 @@
                 if(index === 0) { 
                     ctx.fillStyle = "#ffffff";
                     ctx.fillRect(part.x + 4, part.y + 4, 3, 3);
-                    ctx.fillRect(part.x + 11, part.y + 4, 3, 3);
+                    ctx.fillRect(part.x + 12, part.y + 4, 3, 3);
                 }
             });
 
-            // Desenhar Item Coletável (Emoji)
+            // Desenhar Item Coletável Centralizado no Bloco
             ctx.save();
-            ctx.font = `${gridSize - 2}px Arial`;
+            ctx.font = `${gridSize - 4}px Arial`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(itemEmoji, itemX + gridSize / 2, itemY + gridSize / 2);
