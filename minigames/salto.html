@@ -42,7 +42,7 @@
             width: 100vw;
             height: 100vh;
             position: relative;
-            background: #0f172a;
+            background: #1c1917;
             overflow: hidden;
         }
 
@@ -204,12 +204,12 @@
         <div id="modal-start" class="screen-overlay">
             <div class="screen-content">
                 <div class="game-icon">🏃‍♂️💨</div>
-                <h2>Operação 4º Andar</h2>
-                <p>O sinal tocou e os elevadores travaram com tanta gente! Vá pelas escadas antes que o tempo acabe e perca a presença!</p>
+                <h2>Retorno do Intervalo</h2>
+                <p>Os elevadores pararam! Suba os lances de escada para evitar chegar atrasado no retorno do intervalo. A partir do 4º Andar o cansaço bate e os degraus começam a se mover!</p>
                 
                 <div class="alert-box">
                     <strong>⚡ CONTROLES:</strong><br>
-                    Toque no lado esquerdo ou direito da tela para guiar o aluno entre os degraus.
+                    Toque nos lados Esquerdo/Direito para pular de degrau em degrau. Mantenha os saltos precisos.
                 </div>
 
                 <p style="color: var(--yellow); font-weight: 600; font-size: 13px; margin-bottom: 10px;">🎯 Meta: Alcançar <span id="min-score-text">1000</span> pontos</p>
@@ -265,6 +265,7 @@
         let score = 0;
         let hiScore = 0;
         let backgroundY = 0; 
+        let currentFloor = 1;
         
         let playerObj = {
             x: 0,
@@ -273,13 +274,13 @@
             height: 32,
             vx: 0,
             vy: 0,
-            baseJump: -13.5, 
-            gravity: 0.46,   
+            baseJump: -13.0, 
+            gravity: 0.44,   
             speed: 6.2
         };
 
         let platforms = [];
-        const maxPlatforms = 7; 
+        const fixedPlatformsCount = 7; 
         let inputDirection = 0; 
 
         window.addEventListener("touchstart", (e) => {
@@ -297,19 +298,23 @@
 
         function generatePlatforms() {
             platforms = [];
+            
+            // Primeiro degrau fixo
             platforms.push({
-                x: canvas.width / 2 - 50,
+                x: canvas.width / 2 - 45,
                 y: canvas.height - 70,
-                width: 100,
-                height: 12
+                width: 90,
+                height: 14,
+                vx: 0
             });
 
-            for (let i = 0; i < maxPlatforms; i++) {
+            for (let i = 0; i < fixedPlatformsCount; i++) {
                 platforms.push({
-                    x: Math.random() * (canvas.width - 70),
-                    y: canvas.height - 70 - (i * (canvas.height / maxPlatforms)),
-                    width: 70, 
-                    height: 12
+                    x: 35 + Math.random() * (canvas.width - 145), 
+                    y: canvas.height - 70 - (i * (canvas.height / fixedPlatformsCount)),
+                    width: 75, 
+                    height: 14,
+                    vx: 0 // Velocidade horizontal inicial nula
                 });
             }
         }
@@ -331,6 +336,7 @@
         function resetGameVariables() {
             score = 0;
             backgroundY = 0;
+            currentFloor = 1;
             document.getElementById("score-val").innerText = score;
             playerObj.x = canvas.width / 2 - playerObj.width / 2;
             playerObj.y = canvas.height - 150;
@@ -342,39 +348,59 @@
         function gameLoop() {
             if (!gameActive) return;
 
-            // Fundo Otimizado a 60FPS (Cores Chapadas Rápidas)
-            ctx.fillStyle = "#1e293b"; 
+            // 1. CÁLCULO ESTÁVEL DE ANDAR (Sem repetição infinita bugada)
+            // Cada 900 pixels de subida real de cenário equivale a um andar da escola
+            currentFloor = Math.floor(backgroundY / 900) + 1;
+
+            // 2. RENDERIZAÇÃO DO FUNDO DA ESCOLA (Suave e sem poluição)
+            ctx.fillStyle = "#27272a"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Linhas horizontais leves para sensação de movimento
-            ctx.fillStyle = "#0f172a";
-            for (let i = -150; i < canvas.height + 150; i += 150) {
-                let currentY = i + (backgroundY % 150);
-                ctx.fillRect(0, currentY, canvas.width, 4);
+            // Linhas de blocos de parede acompanhando a subida real
+            ctx.fillStyle = "rgba(30, 58, 138, 0.12)"; 
+            for (let i = -400; i < canvas.height + 400; i += 400) {
+                let currentY = i + (backgroundY % 400);
+                ctx.fillRect(0, currentY, canvas.width, 50);
+                
+                // Texto de Andar fixo no bloco correspondente à altura absoluta
+                ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+                ctx.font = "bold 38px Poppins";
+                ctx.textAlign = "center";
+                let textFloor = Math.floor((backgroundY + (canvas.height - currentY)) / 900) + 1;
+                ctx.fillText(`${textFloor}º ANDAR`, canvas.width / 2, currentY + 38);
+                ctx.fillStyle = "rgba(30, 58, 138, 0.12)";
             }
 
-            // Marcador de Andar
-            ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+            // Corrimão lateral sutil
+            ctx.fillStyle = "rgba(161, 161, 170, 0.25)"; 
+            ctx.fillRect(15, 0, 5, canvas.height);
+            ctx.fillRect(canvas.width - 20, 0, 5, canvas.height);
+
+            // HUD do Andar Atual pintado no topo do Canvas discretamente
+            ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
             ctx.font = "bold 11px Poppins";
             ctx.textAlign = "left";
-            let andarAtual = Math.floor(score / 350) + 1;
-            ctx.fillText(`🏢 ANDAR: ${andarAtual <= 4 ? andarAtual + 'º' : 'COBERTURA'}`, 25, 55);
+            ctx.fillText(`🏢 ANDAR ATUAL: ${currentFloor <= 4 ? currentFloor + 'º' : 'COBERTURA'}`, 25, 55);
 
-            // Movimento Jogador
+            // 3. FÍSICA E MOVIMENTO DO ALUNO
             playerObj.vx = inputDirection * playerObj.speed;
             playerObj.x += playerObj.vx;
 
-            if (playerObj.x < -playerObj.width) playerObj.x = canvas.width;
-            if (playerObj.x > canvas.width) playerObj.x = -playerObj.width;
+            if (playerObj.x < 22) playerObj.x = 22;
+            if (playerObj.x > canvas.width - 22 - playerObj.width) playerObj.x = canvas.width - 22 - playerObj.width;
 
             playerObj.vy += playerObj.gravity;
             playerObj.y += playerObj.vy;
 
-            // Progressão de dificuldade agressiva baseada na altura
-            let diffProgression = Math.min(score / 2000, 0.45); 
-            let targetWidth = 70 - (diffProgression * 30); // Diminui o degrau até 40px
+            // 4. MECÂNICA DE DIFICULDADE (A partir do 4º Andar, os degraus se movem!)
+            let isHardMode = currentFloor >= 4;
+            if (isHardMode) {
+                playerObj.gravity = 0.47; // Gravidade ligeiramente maior na fadiga
+            } else {
+                playerObj.gravity = 0.44;
+            }
 
-            // Scroll da Câmera
+            // Scroll da Câmera Vertical
             if (playerObj.y < canvas.height * 0.45) {
                 let diff = (canvas.height * 0.45) - playerObj.y;
                 playerObj.y = canvas.height * 0.45;
@@ -387,32 +413,42 @@
                     p.y += diff;
                     if (p.y > canvas.height) {
                         p.y = 0 - Math.random() * 20;
-                        p.x = Math.random() * (canvas.width - targetWidth);
-                        p.width = targetWidth; 
+                        p.x = 35 + Math.random() * (canvas.width - 145);
+                        // Se estiver no 4º Andar ou mais, atribui uma velocidade horizontal aleatória
+                        p.vx = isHardMode ? (Math.random() > 0.5 ? 1.5 : -1.5) : 0;
                     }
                 });
             }
 
-            // Desenhar Degraus (Sem loops pesados ou sombras)
+            // 5. MOVIMENTAÇÃO E DESENHO DAS PLATAFORMAS (DEGRAUS)
             platforms.forEach(p => {
-                ctx.fillStyle = "#475569";
+                // Atualiza movimento lateral se estiver no modo difícil
+                if (p.vx !== 0) {
+                    p.x += p.vx;
+                    if (p.x < 25 || p.x > canvas.width - 25 - p.width) {
+                        p.vx *= -1; // Rebate nos corrimãos
+                    }
+                }
+
+                // Desenho com alto contraste limpo
+                ctx.fillStyle = "#f4f4f5";
                 ctx.fillRect(p.x, p.y, p.width, p.height);
 
-                ctx.fillStyle = "#eab308"; // Faixa Amarela
+                ctx.fillStyle = "#09090b"; // Cantoneira antiderrapante
                 ctx.fillRect(p.x, p.y, p.width, 3);
 
-                // Colisão Física Truncada
+                // Colisão de Pouso
                 if (playerObj.vy > 0 &&
-                    playerObj.x + 4 < p.x + p.width &&
-                    playerObj.x + playerObj.width - 4 > p.x &&
+                    playerObj.x + 2 < p.x + p.width &&
+                    playerObj.x + playerObj.width - 2 > p.x &&
                     playerObj.y + playerObj.height >= p.y &&
                     playerObj.y + playerObj.height <= p.y + p.height + 6
                 ) {
-                    playerObj.vy = playerObj.baseJump + (diffProgression * 0.6); 
+                    playerObj.vy = playerObj.baseJump; 
                 }
             });
 
-            // Desenhar Aluno
+            // 6. DESENHAR ALUNO
             ctx.save();
             ctx.font = `${playerObj.width}px Arial`;
             ctx.textAlign = "center";
@@ -420,6 +456,7 @@
             ctx.fillText("🏃‍♂️", playerObj.x + playerObj.width / 2, playerObj.y + playerObj.height / 2);
             ctx.restore();
 
+            // Derrota por queda
             if (playerObj.y > canvas.height) {
                 endGame();
                 return;
@@ -439,11 +476,10 @@
             const rewardStatus = document.getElementById("reward-status");
             const rankingList = document.getElementById("ranking-list");
             
-            rewardStatus.innerHTML = "Atualizando histórico...";
+            rewardStatus.innerHTML = "Gravando performance...";
             rankingList.innerHTML = "<p style='font-size:11px; color:var(--muted)'>Buscando classificação geral...</p>";
 
             try {
-                // 1. ATUALIZA OS PLACARES (mission_scores)
                 const { data: scores } = await client.from("mission_scores")
                     .select("*")
                     .eq("player_id", player.id)
@@ -463,25 +499,24 @@
 
                 let textHtml = `Fôlego final: <b>${score} pts</b>`;
 
-                // 2. ATUALIZA AS RECOMPENSAS (mission_rewards)
                 const { data: rewards } = await client.from("mission_rewards")
                     .select("*")
                     .eq("player_id", player.id)
                     .eq("mission_slug", missionSlug);
 
                 if (rewards && rewards.length > 0) {
-                    textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">🎁 Recompensa já resgatada anteriormente!</p>`;
+                    textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">🎁 Recompensa já garantida anteriormente nesta fase!</p>`;
                 } else if (melhorScore >= MIN_SCORE) {
                     await client.from("mission_rewards").insert([{ 
                         player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
                     }]);
-                    textHtml += `<p style="color:var(--green); font-weight:700; margin-top:4px;">🎉 Excelente! Você subiu até as salas e liberou 1 Pacote Extra!</p>`;
+                    textHtml += `<p style="color:var(--green); font-weight:700; margin-top:4px;">🎉 Sensacional! Você venceu as escadas e ganhou 1 Pacote Extra!</p>`;
                 } else {
                     textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">Faça ${MIN_SCORE} pontos para coletar seu pacote.</p>`;
                 }
                 rewardStatus.innerHTML = textHtml;
 
-                // 3. PUXA O RANKING TOP 10 NO PADRÃO CORRETO COM EMOJI E TURMA_AREA
+                // RANKING TOP 10 PADRÃO COPA
                 const { data: leaderboard } = await client.from("mission_scores")
                     .select("score, player_id, players(name, emoji, turma_area)")
                     .eq("mission_slug", missionSlug)
@@ -524,7 +559,7 @@
 
             } catch (err) {
                 console.error(err);
-                rewardStatus.innerHTML = `Pontuação: <b>${score}</b><p style="color:red; font-size:11px; margin-top:4px;">Erro de conexão com o banco.</p>`;
+                rewardStatus.innerHTML = `Pontuação: <b>${score}</b><p style="color:red; font-size:11px; margin-top:4px;">Erro ao atualizar o placar.</p>`;
             }
         }
     </script>
