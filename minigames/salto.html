@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Operação 4º Andar - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: var(--bg-dark);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #0f172a;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        #score-val { color: var(--yellow); }
+        #hi-val { color: var(--muted); }
+
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.97);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-width: 360px;
+            background: #0f172a;
+            border-radius: 24px;
+            padding: 25px 20px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        }
+
+        .screen-content h2 { margin-bottom: 8px; font-size: 22px; font-weight: 700; }
+        .screen-content p { color: var(--muted); font-size: 13px; margin-bottom: 12px; line-height: 1.4; }
+
+        .game-icon { font-size: 48px; margin-bottom: 8px; display: inline-block; }
+
+        button.action-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            background: linear-gradient(180deg, #2563eb, #1d4ed8);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            width: 100%;
+        }
+
+        .alert-box {
+            background: rgba(37, 99, 235, 0.08);
+            padding: 12px;
+            border-radius: 14px;
+            margin: 12px 0;
+            font-size: 12px;
+            border: 1px dashed var(--blue);
+            color: #a3c2ff;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            border-radius: 12px;
+            margin: 10px 0;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ranking-container {
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            padding: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ranking-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--yellow);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .ranking-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ranking-row.podium {
+            background: rgba(250, 204, 21, 0.08);
+            font-weight: 600;
+        }
+
+        .ranking-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .ranking-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+
+        .ranking-tag {
+            font-size: 9px;
+            background: rgba(255,255,255,0.1);
+            padding: 1px 4px;
+            border-radius: 4px;
+            color: var(--muted);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div id="hud">
+            <div>FÔLEGO: <span id="score-val">0</span></div>
+            <div>RECORDE: <span id="hi-val">0</span></div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div class="game-icon">🏃‍♂️💨</div>
+                <h2>Operação 4º Andar</h2>
+                <p>O sinal tocou e os elevadores travaram com tanta gente! Vá pelas escadas antes que o tempo acabe e perca a presença!</p>
+                
+                <div class="alert-box">
+                    <strong>⚡ CONTROLES:</strong><br>
+                    Toque no lado esquerdo ou direito da tela para guiar o aluno entre os degraus.
+                </div>
+
+                <p style="color: var(--yellow); font-weight: 600; font-size: 13px; margin-bottom: 10px;">🎯 Meta: Alcançar <span id="min-score-text">1000</span> pontos</p>
+                <button class="action-btn" onclick="startGame()">Subir Escadas</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div id="end-icon" style="font-size: 40px; margin-bottom: 3px;">💥</div>
+                <h2 id="end-title">Fim da Subida!</h2>
+                <div class="reward-section" id="reward-status">Sincronizando dados...</div>
+                
+                <div class="ranking-container">
+                    <div class="ranking-title">🏆 TOP 10 - ESCADARIA</div>
+                    <div id="ranking-list">
+                        <p style="font-size:11px; color:var(--muted)">Carregando classificação...</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 8px;">
+                    <button class="action-btn" onclick="resetGame()">Tentar de Novo</button>
+                    <button class="action-btn" onclick="goAlbum()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); width: auto;">Álbum</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const MIN_SCORE = 1000;
+        document.getElementById("min-score-text").innerText = MIN_SCORE;
+
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "quarto-andar";
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let gameActive = false;
+        let score = 0;
+        let hiScore = 0;
+        let backgroundY = 0; 
+        
+        let playerObj = {
+            x: 0,
+            y: 0,
+            width: 32,
+            height: 32,
+            vx: 0,
+            vy: 0,
+            baseJump: -13.5, 
+            gravity: 0.46,   
+            speed: 6.2
+        };
+
+        let platforms = [];
+        const maxPlatforms = 7; 
+        let inputDirection = 0; 
+
+        window.addEventListener("touchstart", (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            const touchX = e.touches[0].clientX;
+            inputDirection = touchX < window.innerWidth / 2 ? -1 : 1;
+        });
+        window.addEventListener("touchend", () => inputDirection = 0);
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft" || e.key === "a") inputDirection = -1;
+            if (e.key === "ArrowRight" || e.key === "d") inputDirection = 1;
+        });
+        window.addEventListener("keyup", () => inputDirection = 0);
+
+        function generatePlatforms() {
+            platforms = [];
+            platforms.push({
+                x: canvas.width / 2 - 50,
+                y: canvas.height - 70,
+                width: 100,
+                height: 12
+            });
+
+            for (let i = 0; i < maxPlatforms; i++) {
+                platforms.push({
+                    x: Math.random() * (canvas.width - 70),
+                    y: canvas.height - 70 - (i * (canvas.height / maxPlatforms)),
+                    width: 70, 
+                    height: 12
+                });
+            }
+        }
+
+        function startGame() {
+            document.getElementById("modal-start").classList.add("hidden");
+            resetGameVariables();
+            gameActive = true;
+            gameLoop();
+        }
+
+        function resetGame() {
+            document.getElementById("modal-end").classList.add("hidden");
+            resetGameVariables();
+            gameActive = true;
+            gameLoop();
+        }
+
+        function resetGameVariables() {
+            score = 0;
+            backgroundY = 0;
+            document.getElementById("score-val").innerText = score;
+            playerObj.x = canvas.width / 2 - playerObj.width / 2;
+            playerObj.y = canvas.height - 150;
+            playerObj.vx = 0;
+            playerObj.vy = playerObj.baseJump; 
+            generatePlatforms();
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            // Fundo Otimizado a 60FPS (Cores Chapadas Rápidas)
+            ctx.fillStyle = "#1e293b"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Linhas horizontais leves para sensação de movimento
+            ctx.fillStyle = "#0f172a";
+            for (let i = -150; i < canvas.height + 150; i += 150) {
+                let currentY = i + (backgroundY % 150);
+                ctx.fillRect(0, currentY, canvas.width, 4);
+            }
+
+            // Marcador de Andar
+            ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+            ctx.font = "bold 11px Poppins";
+            ctx.textAlign = "left";
+            let andarAtual = Math.floor(score / 350) + 1;
+            ctx.fillText(`🏢 ANDAR: ${andarAtual <= 4 ? andarAtual + 'º' : 'COBERTURA'}`, 25, 55);
+
+            // Movimento Jogador
+            playerObj.vx = inputDirection * playerObj.speed;
+            playerObj.x += playerObj.vx;
+
+            if (playerObj.x < -playerObj.width) playerObj.x = canvas.width;
+            if (playerObj.x > canvas.width) playerObj.x = -playerObj.width;
+
+            playerObj.vy += playerObj.gravity;
+            playerObj.y += playerObj.vy;
+
+            // Progressão de dificuldade agressiva baseada na altura
+            let diffProgression = Math.min(score / 2000, 0.45); 
+            let targetWidth = 70 - (diffProgression * 30); // Diminui o degrau até 40px
+
+            // Scroll da Câmera
+            if (playerObj.y < canvas.height * 0.45) {
+                let diff = (canvas.height * 0.45) - playerObj.y;
+                playerObj.y = canvas.height * 0.45;
+                
+                score += Math.floor(diff * 0.4);
+                backgroundY += diff; 
+                document.getElementById("score-val").innerText = score;
+
+                platforms.forEach(p => {
+                    p.y += diff;
+                    if (p.y > canvas.height) {
+                        p.y = 0 - Math.random() * 20;
+                        p.x = Math.random() * (canvas.width - targetWidth);
+                        p.width = targetWidth; 
+                    }
+                });
+            }
+
+            // Desenhar Degraus (Sem loops pesados ou sombras)
+            platforms.forEach(p => {
+                ctx.fillStyle = "#475569";
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+
+                ctx.fillStyle = "#eab308"; // Faixa Amarela
+                ctx.fillRect(p.x, p.y, p.width, 3);
+
+                // Colisão Física Truncada
+                if (playerObj.vy > 0 &&
+                    playerObj.x + 4 < p.x + p.width &&
+                    playerObj.x + playerObj.width - 4 > p.x &&
+                    playerObj.y + playerObj.height >= p.y &&
+                    playerObj.y + playerObj.height <= p.y + p.height + 6
+                ) {
+                    playerObj.vy = playerObj.baseJump + (diffProgression * 0.6); 
+                }
+            });
+
+            // Desenhar Aluno
+            ctx.save();
+            ctx.font = `${playerObj.width}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🏃‍♂️", playerObj.x + playerObj.width / 2, playerObj.y + playerObj.height / 2);
+            ctx.restore();
+
+            if (playerObj.y > canvas.height) {
+                endGame();
+                return;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        async function endGame() {
+            gameActive = false;
+            if (score > hiScore) {
+                hiScore = score;
+                document.getElementById("hi-val").innerText = hiScore;
+            }
+
+            document.getElementById("modal-end").classList.remove("hidden");
+            const rewardStatus = document.getElementById("reward-status");
+            const rankingList = document.getElementById("ranking-list");
+            
+            rewardStatus.innerHTML = "Atualizando histórico...";
+            rankingList.innerHTML = "<p style='font-size:11px; color:var(--muted)'>Buscando classificação geral...</p>";
+
+            try {
+                // 1. ATUALIZA OS PLACARES (mission_scores)
+                const { data: scores } = await client.from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                let melhorScore = score;
+
+                if (!scores || scores.length === 0) {
+                    await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: score }]);
+                } else {
+                    melhorScore = scores.reduce((max, item) => item.score > max ? item.score : max, scores[0].score);
+                    if (score > melhorScore) {
+                        await client.from("mission_scores").update({ score: score }).eq("player_id", player.id).eq("mission_slug", missionSlug);
+                        melhorScore = score;
+                    }
+                }
+
+                let textHtml = `Fôlego final: <b>${score} pts</b>`;
+
+                // 2. ATUALIZA AS RECOMPENSAS (mission_rewards)
+                const { data: rewards } = await client.from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (rewards && rewards.length > 0) {
+                    textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">🎁 Recompensa já resgatada anteriormente!</p>`;
+                } else if (melhorScore >= MIN_SCORE) {
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
+                    }]);
+                    textHtml += `<p style="color:var(--green); font-weight:700; margin-top:4px;">🎉 Excelente! Você subiu até as salas e liberou 1 Pacote Extra!</p>`;
+                } else {
+                    textHtml += `<p style="color:var(--muted); font-size:12px; margin-top:4px;">Faça ${MIN_SCORE} pontos para coletar seu pacote.</p>`;
+                }
+                rewardStatus.innerHTML = textHtml;
+
+                // 3. PUXA O RANKING TOP 10 NO PADRÃO CORRETO COM EMOJI E TURMA_AREA
+                const { data: leaderboard } = await client.from("mission_scores")
+                    .select("score, player_id, players(name, emoji, turma_area)")
+                    .eq("mission_slug", missionSlug)
+                    .order("score", { ascending: false })
+                    .limit(10);
+
+                if (leaderboard && leaderboard.length > 0) {
+                    rankingList.innerHTML = ""; 
+                    
+                    leaderboard.forEach((item, index) => {
+                        const isMainPlayer = item.player_id === player.id;
+                        const row = document.createElement("div");
+                        row.className = `ranking-row ${index < 3 ? 'podium' : ''}`;
+                        if(isMainPlayer) row.style.border = "1px solid var(--yellow)";
+
+                        let positionIndicator = `${index + 1}º`;
+                        if(index === 0) positionIndicator = "🥇";
+                        if(index === 1) positionIndicator = "🥈";
+                        if(index === 2) positionIndicator = "🥉";
+
+                        let userObj = item.players || {};
+                        let userEmoji = userObj.emoji || "👤";
+                        let userName = userObj.name || "Aluno da Copa";
+                        let userTurma = userObj.turma_area || "Geral";
+
+                        row.innerHTML = `
+                            <div class="ranking-left">
+                                <span style="font-weight:600">${positionIndicator}</span>
+                                <span>${userEmoji}</span>
+                                <span class="ranking-name">${userName} ${isMainPlayer ? '(Você)' : ''}</span>
+                                <span class="ranking-tag">${userTurma}</span>
+                            </div>
+                            <span style="color:var(--yellow); font-weight:600">${item.score}</span>
+                        `;
+                        rankingList.appendChild(row);
+                    });
+                } else {
+                    rankingList.innerHTML = "<p style='font-size:11px; color:var(--muted)'>Nenhum registro encontrado.</p>";
+                }
+
+            } catch (err) {
+                console.error(err);
+                rewardStatus.innerHTML = `Pontuação: <b>${score}</b><p style="color:red; font-size:11px; margin-top:4px;">Erro de conexão com o banco.</p>`;
+            }
+        }
+    </script>
+</body>
+
+</html>
