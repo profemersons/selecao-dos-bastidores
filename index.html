@@ -19,8 +19,7 @@
     <div class="container">
 
         <!-- BOAS VINDAS -->
-        <section id="screen-welcome" class="screen active">
-
+       <section id="screen-welcome" class="screen active">
 
             <h1>Seleção dos Bastidores</h1>
 
@@ -40,6 +39,10 @@
 
             <button class="how-btn" onclick="openHowItWorks()">
                 📘 Como funciona
+            </button>
+
+            <button class="how-btn" onclick="openNotice()" style="border-color: rgba(250, 204, 21, 0.4); color: var(--yellow); margin-top: 10px;">
+                ⚠️ Atenção jogadores
             </button>
 
             <p id="codeError" class="error"></p>
@@ -128,6 +131,19 @@
         <div id="howText"></div>
 
         <button onclick="closeHowItWorks()">
+            Entendi
+        </button>
+
+    </div>
+</div>
+<div id="noticeModal" class="modal hidden">
+    <div class="modal-content how-content">
+
+        <h2 style="color: var(--yellow);">⚠️ Atenção, Jogadores!</h2>
+
+        <div id="noticeText" class="how-text"></div>
+
+        <button onclick="closeNotice()">
             Entendi
         </button>
 

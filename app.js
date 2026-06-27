@@ -579,3 +579,30 @@ function openHowItWorks() {
 function closeHowItWorks() {
     document.getElementById("howModal").classList.add("hidden");
 }
+/* =========================
+MODAL ATENÇÃO / RECADOS
+========================= */
+
+const noticeTextContent = `
+Queremos agradecer de coração a todas as pessoas que estão jogando, colecionando e se divertindo muito com a Seleção dos Bastidores! É incrível ver a energia de vocês.
+
+📢 Comunicado Importante:
+Devido ao início das férias escolares, as últimas missões inéditas do jogo serão lançadas no dia 28/06. 
+
+No entanto, a diversão não para por aí! O jogo continuará totalmente disponível e ativo para que você possa continuar jogando as missões anteriores, se divertindo e garantindo os seus pacotes diários de figurinhas para completar o seu álbum!
+
+Muito obrigado a todos e boa sorte na busca pelas últimas figurinhas! 🏆
+`;
+
+function openNotice() {
+    document.getElementById("noticeModal").classList.remove("hidden");
+    document.getElementById("noticeText").innerText = noticeTextContent;
+}
+
+function closeNotice() {
+    document.getElementById("noticeModal").classList.add("hidden");
+}
+
+// Expõe as funções globalmente para o HTML conseguir acessá-las
+window.openNotice = openNotice;
+window.closeNotice = closeNotice;
