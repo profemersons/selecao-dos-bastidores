@@ -307,6 +307,18 @@ async function loadMissionPacks() {
                 nomeMissao = "Missão Serpente da Carreira";
                 emojiMissao = "🐍";
                 break;
+            case "six-seven":
+                nomeMissao = "Missão Avançada de Álgebra";
+                emojiMissao = "📓";
+                break;
+            case "pescaria":
+                nomeMissao = "Missão Pescaria";
+                emojiMissao = "🎣";
+                break;
+            case "pipoca":
+                nomeMissao = "Missão Pipoqueiros";
+                emojiMissao = "🍿";
+                break;
             default:
                 if (registro.mission_slug) {
                     nomeMissao = `Missão ${registro.mission_slug.toUpperCase()}`;
