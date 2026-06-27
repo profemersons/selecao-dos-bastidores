@@ -39,25 +39,25 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow-x: hidden;
-            overflow-y: auto;
-            padding: 12px;
+            overflow: hidden; /* Remove o scroll do body */
+            padding: 10px;
         }
 
         #game-wrapper {
             width: 100%;
             max-width: 430px;
-            min-height: 80vh;
+            height: 92vh; /* Altura fixa alinhada ao estilo principal */
             position: relative;
             background: rgba(15, 23, 42, 0.6);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, .08);
-            backdrop-filter: blur(20px);
+            border-radius: 32px; /* Cantos arredondados no padrão */
+            border: 1px solid rgba(255, 255, 255, .1);
+            backdrop-filter: blur(25px);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: center;
             padding: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         .question-header {
@@ -101,7 +101,6 @@
             transform: scale(1);
         }
 
-        /* Cor diferenciada para os sinais de mais se destacar no ritmo */
         .sign {
             color: var(--blue);
         }
@@ -148,15 +147,14 @@
         button.action-btn {
             width: 100%;
             border: none;
-            border-radius: 16px;
-            padding: 14px;
+            border-radius: 18px;
+            padding: 16px;
             cursor: pointer;
             color: white;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 16px;
-            background: linear-gradient(180deg, #3b82f6, #2563eb);
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-            transition: transform 0.1s;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            transition: transform 0.2s;
         }
 
         button.action-btn:active { transform: scale(0.98); }
@@ -168,28 +166,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 16px;
+            padding: 25px;
             z-index: 200;
             text-align: center;
         }
 
         .screen-content {
             width: 100%;
-            max-height: 88vh;
             background: var(--bg-light);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 32px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            max-height: 85vh;
             overflow-y: auto;
         }
 
-        .screen-content h2 { font-size: 24px; margin-bottom: 12px; }
-        .screen-content p { color: var(--muted); font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+        .screen-content h2 { font-size: 26px; margin-bottom: 12px; letter-spacing: -0.5px; }
+        .screen-content p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
 
         .meme-gif {
             width: 100%;
-            max-width: 280px;
-            border-radius: 16px;
+            max-width: 240px;
+            border-radius: 20px;
             margin: 15px auto;
             display: block;
             border: 2px solid var(--yellow);
@@ -226,7 +224,7 @@
         .reward-section {
             background: rgba(255, 255, 255, 0.04);
             padding: 15px;
-            border-radius: 16px;
+            border-radius: 18px;
             margin: 15px 0;
             font-size: 14px;
             border: 1px dashed rgba(255, 255, 255, 0.1);
@@ -243,7 +241,7 @@
         <div id="modal-start" class="screen-overlay">
             <div class="screen-content">
                 <div style="font-size: 50px; margin-bottom: 15px;">📓</div>
-                <h2>Desafio de Álgebra Relâmpago</h2>
+                <h2>Desafio Avançado de Álgebra</h2>
                 <p>A professora de matemática preparou uma equação de raciocínio rápido para testar os alunos da Copa. Preste muita atenção na lousa!</p>
                 <button class="action-btn" onclick="startSequence()">Iniciar Teste</button>
             </div>
@@ -312,30 +310,26 @@
             const lyric = document.getElementById('lyric-prompt');
             const inputs = document.getElementById('interactive-inputs');
 
-            // Mapeamento de cada parte isolada
-            const el1 = document.getElementById('p1'); // 20
-            const el2 = document.getElementById('p2'); // +
-            const el3 = document.getElementById('p3'); // 20
-            const el4 = document.getElementById('p4'); // +
-            const el5 = document.getElementById('p5'); // 20
-            const el6 = document.getElementById('p6'); // +
-            const el7 = document.getElementById('p7'); // 7
+            const el1 = document.getElementById('p1');
+            const el2 = document.getElementById('p2');
+            const el3 = document.getElementById('p3');
+            const el4 = document.getElementById('p4');
+            const el5 = document.getElementById('p5');
+            const el6 = document.getElementById('p6');
+            const el7 = document.getElementById('p7');
 
-            // 1. Aparece a pergunta inicial da trend
             setTimeout(() => {
                 header.innerText = "Professora, que conta é essa?";
             }, 300);
 
-            // 2. Aparição estritamente sequencial acompanhando a música (passos de ~500ms)
-            setTimeout(() => el1.classList.add('show'), 1200); // "20"
-            setTimeout(() => el2.classList.add('show'), 1650); // "+"
-            setTimeout(() => el3.classList.add('show'), 2100); // "20"
-            setTimeout(() => el4.classList.add('show'), 2550); // "+"
-            setTimeout(() => el5.classList.add('show'), 3000); // "20"
-            setTimeout(() => el6.classList.add('show'), 3450); // "+"
-            setTimeout(() => el7.classList.add('show'), 3900); // "7"
+            setTimeout(() => el1.classList.add('show'), 1200); 
+            setTimeout(() => el2.classList.add('show'), 1650); 
+            setTimeout(() => el3.classList.add('show'), 2100); 
+            setTimeout(() => el4.classList.add('show'), 2550); 
+            setTimeout(() => el5.classList.add('show'), 3000); 
+            setTimeout(() => el6.classList.add('show'), 3450); 
+            setTimeout(() => el7.classList.add('show'), 3900); 
 
-            // 3. Libera o desfecho do meme ("aí é muito fácil...") e o input de texto
             setTimeout(() => {
                 lyric.classList.add('show');
                 inputs.classList.add('show');

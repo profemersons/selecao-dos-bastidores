@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fábrica de Pipoca - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --blue: #3b82f6;   
+            --red: #ef4444;    
+            --yellow: #facc15; 
+            --green: #22c55e;  
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            user-select: none; 
+            -webkit-user-select: none; 
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent),
+                        linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden; 
+            padding: 10px;
+        }
+
+        #game-wrapper {
+            width: 100%; 
+            max-width: 430px; 
+            height: 92vh; 
+            position: relative;
+            background: rgba(15, 23, 42, 0.7); 
+            border-radius: 32px; 
+            border: 1px solid rgba(255, 255, 255, .1);
+            backdrop-filter: blur(25px); 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
+
+        /* HUD Superior Padrão */
+        .hud-header { 
+            background: var(--card); 
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, .1); 
+            padding: 15px;
+            z-index: 10; 
+        }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-box { background: rgba(255, 255, 255, .05); border-radius: 14px; padding: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-box span { display: block; font-size: 16px; font-weight: 700; }
+        .stat-box .val-yellow { color: var(--yellow); }
+        .stat-box .val-red { color: var(--red); }
+        .stat-box .val-blue { color: var(--blue); }
+        .stat-box small { color: var(--muted); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Área Útil da Fábrica */
+        .factory-area {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            margin: 15px 0;
+            touch-action: none;
+        }
+
+        /* O Balde CSS Original Preservado */
+        .bucket {
+            position: absolute;
+            bottom: 15px;
+            left: calc(50% - 40px);
+            width: 80px;
+            height: 70px;
+            background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+            border-top: 6px solid #ffffff;
+            border-radius: 4px 4px 20px 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* Pipocas Dinâmicas com Imagens */
+        .falling-item {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 50;
+            will-change: transform;
+        }
+
+        /* Modais e Telas de Interface */
+        .screen-overlay { 
+            position: absolute; 
+            inset: 0; 
+            background: rgba(7, 17, 31, 0.98); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+            z-index: 200; 
+            text-align: center; 
+        }
+        .screen-content { 
+            width: 100%; 
+            background: var(--bg-light); 
+            border-radius: 32px; 
+            padding: 28px; 
+            border: 1px solid rgba(255, 255, 255, .1); 
+            max-height: 85vh; 
+            overflow-y: auto; 
+        }
+        .screen-content h2 { font-size: 24px; margin-bottom: 10px; letter-spacing: -0.5px; }
+        .screen-content p { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 15px; }
+        
+        button.action-btn { 
+            width: 100%; 
+            border: none; 
+            border-radius: 18px; 
+            padding: 16px; 
+            cursor: pointer; 
+            color: white; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, #3b82f6, #2563eb); 
+            margin-top: 12px; 
+            font-size: 16px; 
+            transition: transform 0.2s; 
+        }
+        button.action-btn:active { transform: scale(0.98); }
+
+        /* Estrutura do Top 10 Padrão dos Outros Jogos */
+        .ranking-container { 
+            width: 100%; 
+            margin-top: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .rank-card {
+            background: rgba(255, 255, 255, 0.05); 
+            border-radius: 16px; 
+            padding: 10px 14px;
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+        }
+        .rank-pos { font-weight: 800; font-size: 16px; width: 28px; color: var(--muted); font-family: monospace; }
+        .rank-pos.pos-1 { color: #facc15; }
+        .rank-pos.pos-2 { color: #e2e8f0; }
+        .rank-pos.pos-3 { color: #cd7f32; }
+
+        .rank-info { flex: 1; min-width: 0; }
+        .rank-name { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rank-turma { font-size: 10px; color: var(--muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rank-score { font-weight: 800; font-size: 15px; color: var(--blue); }
+
+        .hidden { display: none !important; }
+
+        .game-feedback {
+            position: absolute;
+            font-weight: 800;
+            font-size: 18px;
+            animation: fadeUpOut 0.6s ease-out forwards;
+            z-index: 120;
+            pointer-events: none;
+        }
+
+        @keyframes fadeUpOut {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 10px;">🍿</div>
+                <h2>Fábrica de Pipoca</h2>
+                <p>Arraste o balde para os lados com o dedo ou mouse. Colete as pipocas boas e desvie das queimadas!</p>
+                
+                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 14px; margin: 15px 0; font-size: 13px; text-align: left; line-height: 1.6;">
+                    🔸 <b>Pipoca Normal:</b> Ganha +100 pontos<br>
+                    🔸 <b>Pipoca Queimada:</b> Perde -200 pontos e remove 1 Vida
+                </div>
+
+                <p style="color: var(--yellow); font-weight: 600; font-size: 14px;">🎯 Meta Mínima: 3000 pontos para ganhar o Pacote!</p>
+                <button class="action-btn" onclick="startGame()">Começar Produção</button>
+            </div>
+        </div>
+
+        <div class="hud-header">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span id="txt-time" class="val-blue">45s</span>
+                    <small>Tempo</small>
+                </div>
+                <div class="stat-box">
+                    <span id="txt-lives" class="val-red">❤️❤️❤️</span>
+                    <small>Vidas</small>
+                </div>
+                <div class="stat-box">
+                    <span id="txt-score" class="val-yellow">0 pts</span>
+                    <small>Pontos</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="factory-area" id="factory">
+            <div class="bucket" id="bucket"></div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <h2>Fim de Jogo!</h2>
+                <div style="background: rgba(255,255,255,0.04); padding: 15px; border-radius: 16px; margin: 12px 0;">
+                    Sua Pontuação Final: <b id="final-score" style="color: var(--yellow); font-size: 18px;">0 pts</b>
+                    <div id="reward-status" style="margin-top: 5px; font-size: 12px; color: var(--green);"></div>
+                </div>
+                
+                <h3 style="text-align: left; font-size: 15px; font-weight: 700; margin-top: 10px; color: var(--blue);">🏆 Top 10 Alunos</h3>
+                <div class="ranking-container" id="ranking-list"></div>
+                
+                <button class="action-btn" onclick="restartGame()">Jogar Novamente</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "pipoca";
+        
+        let score = 0;
+        let lives = 3;
+        let timeLeft = 45;
+        let gameActive = false;
+        let items = [];
+        let spawnInterval, gameLoopInterval, countdownInterval;
+
+        const factoryEl = document.getElementById('factory');
+        const bucketEl = document.getElementById('bucket');
+
+        let bucketX = 0;
+
+        function startGame() {
+            document.getElementById('modal-start').classList.add('hidden');
+            document.getElementById('modal-end').classList.add('hidden');
+            
+            score = 0;
+            lives = 3;
+            timeLeft = 45;
+            items.forEach(item => item.el.remove());
+            items = [];
+            gameActive = true;
+
+            document.getElementById('txt-score').innerText = "0 pts";
+            document.getElementById('txt-time').innerText = "45s";
+            updateLivesUI();
+
+            bucketX = (factoryEl.clientWidth / 2) - 40;
+            bucketEl.style.left = `${bucketX}px`;
+
+            setupControls();
+
+            gameLoopInterval = setInterval(updatePhysics, 1000 / 60); 
+            spawnInterval = setInterval(spawnItem, 500); 
+            countdownInterval = setInterval(updateTimer, 1000);
+        }
+
+        function restartGame() {
+            document.getElementById('modal-end').classList.add('hidden');
+            document.getElementById('modal-start').classList.remove('hidden');
+        }
+
+        function updateLivesUI() {
+            document.getElementById('txt-lives').innerText = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+        }
+
+        function setupControls() {
+            const moveBucket = (clientX) => {
+                if (!gameActive) return;
+                const rect = factoryEl.getBoundingClientRect();
+                let relativeX = clientX - rect.left - 40; 
+
+                if (relativeX < 0) relativeX = 0;
+                if (relativeX > factoryEl.clientWidth - 80) relativeX = factoryEl.clientWidth - 80;
+
+                bucketX = relativeX;
+                bucketEl.style.left = `${bucketX}px`;
+            };
+
+            // Touch Mobile Fluido Sem Travamentos
+            factoryEl.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) moveBucket(e.touches[0].clientX);
+            }, { passive: true });
+
+            factoryEl.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) moveBucket(e.touches[0].clientX);
+            }, { passive: true });
+
+            // Eventos Desktop (Mouse)
+            factoryEl.onmousemove = (e) => {
+                moveBucket(e.clientX);
+            };
+        }
+
+        function spawnItem() {
+            if (!gameActive) return;
+
+            const isGood = Math.random() > 0.30;
+            const itemKind = isGood ? 'popcorn' : 'burnt';
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'falling-item';
+            
+            itemEl.style.backgroundImage = isGood ? "url('pipoca.png')" : "url('queimada.png')";
+
+            const maxLeft = factoryEl.clientWidth - 40;
+            const startX = Math.floor(Math.random() * maxLeft);
+            
+            itemEl.style.left = `${startX}px`;
+            itemEl.style.top = `-45px`;
+            factoryEl.appendChild(itemEl);
+
+            items.push({
+                el: itemEl,
+                x: startX,
+                y: -45,
+                kind: itemKind,
+                speed: Math.random() * 2.5 + 4.0,
+                rotation: 0,
+                rotationSpeed: (Math.random() * 5 + 3) * (Math.random() > 0.5 ? 1 : -1)
+            });
+        }
+
+        function updatePhysics() {
+            if (!gameActive) return;
+
+            const bucketTop = factoryEl.clientHeight - 85;
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                let item = items[i];
+                item.y += item.speed;
+                item.rotation += item.rotationSpeed;
+
+                item.el.style.transform = `translateY(${item.y}px) rotate(${item.rotation}deg)`;
+
+                if (item.y >= bucketTop && item.y <= bucketTop + 35) {
+                    if (item.x + 35 >= bucketX && item.x <= bucketX + 75) {
+                        handleCatch(item);
+                        item.el.remove();
+                        items.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                if (item.y > factoryEl.clientHeight) {
+                    item.el.remove();
+                    items.splice(i, 1);
+                }
+            }
+        }
+
+        function handleCatch(item) {
+            let scoreChange = 0;
+            let color = "var(--green)";
+            let prefix = "+";
+
+            if (item.kind === 'popcorn') {
+                scoreChange = 100;
+                color = "var(--yellow)";
+            } else if (item.kind === 'burnt') {
+                scoreChange = -200;
+                lives--;
+                color = "var(--red)";
+                prefix = "";
+                updateLivesUI();
+                if (lives <= 0) endGame();
+            }
+
+            score += scoreChange;
+            if (score < 0) score = 0;
+
+            document.getElementById('txt-score').innerText = `${score} pts`;
+            createFeedbackText(item.x, scoreChange, color, prefix);
+        }
+
+        function createFeedbackText(x, val, color, prefix) {
+            const fb = document.createElement('div');
+            fb.className = 'game-feedback';
+            fb.innerText = `${prefix}${val}`;
+            fb.style.color = color;
+            fb.style.left = `${x}px`;
+            fb.style.bottom = `85px`;
+            factoryEl.appendChild(fb);
+            setTimeout(() => fb.remove(), 600);
+        }
+
+        function updateTimer() {
+            if (!gameActive) return;
+            timeLeft--;
+            document.getElementById('txt-time').innerText = `${timeLeft}s`;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(spawnInterval);
+            clearInterval(gameLoopInterval);
+            clearInterval(countdownInterval);
+
+            document.getElementById('modal-end').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} pts`;
+            saveToSupabase();
+        }
+
+        async function saveToSupabase() {
+            try {
+                const { data: scores } = await client.from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (!scores || scores.length === 0) {
+                    await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: score }]);
+                } else if (score > scores[0].score) {
+                    await client.from("mission_scores").update({ score: score }).eq("id", scores[0].id);
+                }
+                fetchTop10();
+
+                const { data: rewards } = await client.from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (score >= 3000 && (!rewards || rewards.length === 0)) {
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
+                    }]);
+                    document.getElementById('reward-status').innerHTML = `🎉 <b>Produção perfeita!</b> Seu Pacote foi enviado diretamente ao Álbum!`;
+                } else {
+                    document.getElementById('reward-status').innerHTML = `🎁 Pontuação gravada no painel escolar!`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchTop10() {
+            try {
+                const { data } = await client.from("mission_scores")
+                    .select(`score, players(name, emoji, turma_area)`)
+                    .eq("mission_slug", missionSlug)
+                    .order("score", { ascending: false }).limit(10);
+
+                const container = document.getElementById("ranking-list");
+                container.innerHTML = "";
+                if(!data) return;
+
+                data.forEach((row, i) => {
+                    const p = row.players || { name: "Anônimo", emoji: "👤", turma_area: "Sem Turma" };
+                    const posClass = (i < 3) ? `pos-${i + 1}` : '';
+                    
+                    container.innerHTML += `
+                        <div class="rank-card">
+                            <div class="rank-pos ${posClass}">${i + 1}º</div>
+                            <div class="rank-info">
+                                <div class="rank-name">${p.emoji} ${p.name}</div>
+                                <div class="rank-turma">${p.turma_area}</div>
+                            </div>
+                            <div class="rank-score">${row.score} pts</div>
+                        </div>
+                    `;
+                });
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+
+</html>
