@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Desafio Avançado de Álgebra - Copa das Profissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #2563eb;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, .15), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(34, 197, 94, .15), transparent 40%),
+                linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        #game-wrapper {
+            width: 100%;
+            max-width: 430px;
+            min-height: 80vh;
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .question-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 28px;
+            transition: all 0.5s ease;
+        }
+
+        .math-container {
+            text-align: center;
+            margin: 20px 0;
+            min-height: 60px;
+        }
+
+        .math-equation {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--yellow);
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .num-part {
+            opacity: 0;
+            transform: scale(0.4);
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .num-part.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Cor diferenciada para os sinais de mais se destacar no ritmo */
+        .sign {
+            color: var(--blue);
+        }
+
+        .math-lyric {
+            font-size: 16px;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 25px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .math-lyric.show { opacity: 1; }
+
+        .input-container {
+            width: 100%;
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .input-container.show { opacity: 1; }
+
+        .answer-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: center;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .answer-input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+        }
+
+        button.action-btn {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            transition: transform 0.1s;
+        }
+
+        button.action-btn:active { transform: scale(0.98); }
+
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 200;
+            text-align: center;
+        }
+
+        .screen-content {
+            width: 100%;
+            max-height: 88vh;
+            background: var(--bg-light);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            overflow-y: auto;
+        }
+
+        .screen-content h2 { font-size: 24px; margin-bottom: 12px; }
+        .screen-content p { color: var(--muted); font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+
+        .meme-gif {
+            width: 100%;
+            max-width: 280px;
+            border-radius: 16px;
+            margin: 15px auto;
+            display: block;
+            border: 2px solid var(--yellow);
+        }
+
+        .hand-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 10px 0;
+        }
+
+        .six-seven-hand {
+            font-size: 45px;
+            display: inline-block;
+            animation: moveHandLeft 0.6s ease infinite alternate;
+        }
+
+        .six-seven-hand.inverted {
+            transform: scaleX(-1);
+            animation: moveHandRight 0.6s ease infinite alternate;
+        }
+
+        @keyframes moveHandLeft {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+
+        @keyframes moveHandRight {
+            0% { transform: scaleX(-1) translateY(-15px); }
+            100% { transform: scaleX(-1) translateY(0); }
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+            font-size: 14px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .hidden { display: none !important; }
+        .error-message { color: #ef4444; font-size: 13px; margin-top: 8px; font-weight: 600; min-height: 20px; text-align: center; }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div style="font-size: 50px; margin-bottom: 15px;">📓</div>
+                <h2>Desafio de Álgebra Relâmpago</h2>
+                <p>A professora de matemática preparou uma equação de raciocínio rápido para testar os alunos da Copa. Preste muita atenção na lousa!</p>
+                <button class="action-btn" onclick="startSequence()">Iniciar Teste</button>
+            </div>
+        </div>
+
+        <div id="quiz-area">
+            <div class="question-header" id="phrase-header"></div>
+
+            <div class="math-container">
+                <div class="math-equation">
+                    <span class="num-part" id="p1">20</span>
+                    <span class="num-part sign" id="p2">+</span>
+                    <span class="num-part" id="p3">20</span>
+                    <span class="num-part sign" id="p4">+</span>
+                    <span class="num-part" id="p5">20</span>
+                    <span class="num-part sign" id="p6">+</span>
+                    <span class="num-part" id="p7">7</span>
+                </div>
+                <div class="math-lyric" id="lyric-prompt">Aí é muito fácil, professora, é...</div>
+            </div>
+
+            <div class="input-container" id="interactive-inputs">
+                <input type="text" id="student-answer" class="answer-input" placeholder="??" autocomplete="off">
+                <div id="error-txt" class="error-message"></div>
+                <button class="action-btn" style="margin-top: 15px;" onclick="validateAnswer()">Validar Resposta</button>
+            </div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div class="hand-wrapper">
+                    <span class="six-seven-hand">🫴</span>
+                    <span class="six-seven-hand inverted">🫴</span>
+                </div>
+                <h2 style="color: var(--yellow);">É SIX SEVEN! 🗣️🔥</h2>
+                <p>Calculado com a malandragem certa! Você garantiu seus pontos extras com muito ritmo.</p>
+                
+                <img src="https://media.tenor.com/74s-JIhiLSAAAAAM/el-peque%C3%B1o-baile-de-jamal-taka-la-dentro.gif" alt="Jamal Six Seven Dance" class="meme-gif">
+
+                <div class="reward-section" id="reward-status">Sincronizando recompensa...</div>
+
+                <button class="action-btn" onclick="goAlbum()">Voltar ao Álbum</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "six-seven";
+        const scoreValue = 67; 
+
+        document.getElementById('student-answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') validateAnswer();
+        });
+
+        function startSequence() {
+            document.getElementById('modal-start').classList.add('hidden');
+            
+            const header = document.getElementById('phrase-header');
+            const lyric = document.getElementById('lyric-prompt');
+            const inputs = document.getElementById('interactive-inputs');
+
+            // Mapeamento de cada parte isolada
+            const el1 = document.getElementById('p1'); // 20
+            const el2 = document.getElementById('p2'); // +
+            const el3 = document.getElementById('p3'); // 20
+            const el4 = document.getElementById('p4'); // +
+            const el5 = document.getElementById('p5'); // 20
+            const el6 = document.getElementById('p6'); // +
+            const el7 = document.getElementById('p7'); // 7
+
+            // 1. Aparece a pergunta inicial da trend
+            setTimeout(() => {
+                header.innerText = "Professora, que conta é essa?";
+            }, 300);
+
+            // 2. Aparição estritamente sequencial acompanhando a música (passos de ~500ms)
+            setTimeout(() => el1.classList.add('show'), 1200); // "20"
+            setTimeout(() => el2.classList.add('show'), 1650); // "+"
+            setTimeout(() => el3.classList.add('show'), 2100); // "20"
+            setTimeout(() => el4.classList.add('show'), 2550); // "+"
+            setTimeout(() => el5.classList.add('show'), 3000); // "20"
+            setTimeout(() => el6.classList.add('show'), 3450); // "+"
+            setTimeout(() => el7.classList.add('show'), 3900); // "7"
+
+            // 3. Libera o desfecho do meme ("aí é muito fácil...") e o input de texto
+            setTimeout(() => {
+                lyric.classList.add('show');
+                inputs.classList.add('show');
+                document.getElementById('student-answer').focus();
+            }, 4500);
+        }
+
+        function validateAnswer() {
+            const inputEl = document.getElementById('student-answer');
+            const errorEl = document.getElementById('error-txt');
+            const cleanAnswer = inputEl.value.trim();
+
+            if (cleanAnswer === "67") {
+                errorEl.innerText = "";
+                triggerWin();
+            } else {
+                errorEl.innerText = "❌ Conta errada! Tente novamente no compasso da música.";
+                inputEl.style.borderColor = "#ef4444";
+                setTimeout(() => inputEl.style.borderColor = "rgba(255, 255, 255, 0.1)", 500);
+            }
+        }
+
+        async function triggerWin() {
+            document.getElementById('modal-end').classList.remove('hidden');
+            const rewardStatus = document.getElementById('reward-status');
+
+            try {
+                const { data: scores } = await client.from("mission_scores")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (!scores || scores.length === 0) {
+                    await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: scoreValue }]);
+                }
+
+                const { data: rewards } = await client.from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (rewards && rewards.length > 0) {
+                    rewardStatus.innerHTML = `Pontuação: <b>${scoreValue} pts</b><p style="color:var(--muted); font-size:12px; margin-top:4px;">🎁 Pacote já coletado!</p>`;
+                } else {
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
+                    }]);
+                    rewardStatus.innerHTML = `Pontuação: <b>${scoreValue} pts</b><p style="color:var(--green); font-weight:700; margin-top:4px;">🎉 Sensacional! +1 Pacote adicionado ao seu Álbum!</p>`;
+                }
+
+            } catch (err) {
+                console.error(err);
+                rewardStatus.innerHTML = `Pontuação: <b>${scoreValue} pts</b><p style="color:#ef4444; font-size:11px; margin-top:4px;">Erro ao salvar pacote no servidor.</p>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pescaria Festiva - Arraiá da Copa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../menu/menu.css">
+    <style>
+        :root {
+            --bg-dark: #07111f;
+            --bg-mid: #0f172a;
+            --bg-light: #111827;
+            --green: #22c55e;
+            --yellow: #facc15;
+            --blue: #3b82f6;
+            --orange: #f97316;
+            --red: #ef4444;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --card: rgba(255, 255, 255, .06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background: 
+                radial-gradient(circle at top left, rgba(37, 99, 235, .15), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(34, 197, 94, .15), transparent 40%),
+                linear-gradient(180deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        #game-wrapper {
+            width: 100%;
+            max-width: 430px;
+            height: 88vh;
+            position: relative;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px;
+        }
+
+        /* Bandeirinhas Juninas */
+        .flags-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 0 5px;
+            z-index: 30;
+        }
+
+        .flag {
+            width: 14px;
+            height: 20px;
+            background: var(--yellow);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 75%, 0% 100%);
+            animation: swing 1.2s ease-in-out infinite alternate;
+            transform-origin: top center;
+        }
+        .flag:nth-child(even) { background: var(--blue); animation-delay: 0.15s; }
+        .flag:nth-child(3n) { background: var(--red); animation-delay: 0.3s; }
+        .flag:nth-child(4n) { background: var(--green); animation-delay: 0.45s; }
+
+        @keyframes swing {
+            0% { transform: rotate(-8deg); }
+            100% { transform: rotate(8deg); }
+        }
+
+        /* HUD Clássico */
+        .hud-container {
+            display: flex;
+            justify-content: space-between;
+            background: var(--card);
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .hud-val { color: var(--yellow); }
+        .timer-low { color: var(--red); animation: pulse 0.5s infinite alternate; }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Área do Rio */
+        .river-area {
+            flex-grow: 1;
+            background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 60%, #0f172a 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+            touch-action: none;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Anzol */
+        .movable-hook {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+            cursor: grab;
+        }
+
+        .dynamic-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            background: #cbd5e1;
+            opacity: 0.5;
+            z-index: 20;
+        }
+
+        /* Peixes do Jogo */
+        .fish {
+            position: absolute;
+            white-space: nowrap;
+            will-change: left;
+            display: inline-block;
+        }
+
+        /* Peixes Estáticos da Legenda */
+        .legend-fish {
+            position: relative;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        /* FILTROS ABSOLUTOS DE CORES REAIS */
+        .fish-azul { 
+            filter: grayscale(100%) brightness(0.8) sepia(100%) hue-rotate(190deg) saturate(700%) drop-shadow(0 0 4px #3b82f6); 
+            font-size: 28px; 
+        }
+        .fish-verde { 
+            filter: grayscale(100%) brightness(0.9) sepia(100%) hue-rotate(90deg) saturate(600%) drop-shadow(0 0 4px #22c55e); 
+            font-size: 26px; 
+        }
+        .fish-amarelo { 
+            filter: grayscale(100%) brightness(1.1) sepia(100%) hue-rotate(15deg) saturate(600%) drop-shadow(0 0 4px #facc15); 
+            font-size: 24px; 
+        }
+        .fish-roxo { 
+            filter: grayscale(100%) brightness(0.8) sepia(100%) hue-rotate(260deg) saturate(600%) drop-shadow(0 0 4px #a855f7); 
+            font-size: 22px; 
+        }
+        .fish-vermelho { 
+            filter: grayscale(100%) brightness(0.8) sepia(100%) hue-rotate(340deg) saturate(800%) drop-shadow(0 0 4px #ef4444); 
+            font-size: 18px; 
+        }
+
+        @keyframes swimL2R {
+            0% { left: -60px; transform: scaleX(-1); }
+            100% { left: 100%; transform: scaleX(-1); }
+        }
+        @keyframes swimR2L {
+            0% { left: 100%; transform: scaleX(1); }
+            100% { left: -60px; transform: scaleX(1); }
+        }
+
+        /* Modais Padrão */
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 17, 31, 0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 200;
+        }
+
+        .screen-content {
+            width: 100%;
+            background: var(--bg-mid);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            max-height: 84vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .screen-content h2 { font-size: 22px; margin-bottom: 8px; color: #ffffff; }
+        .screen-content p { color: var(--muted); font-size: 13px; margin-bottom: 15px; line-height: 1.4; }
+
+        /* Blocos da Legenda */
+        .legend-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 18px 0;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 35px;
+        }
+
+        .legend-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .legend-fish-wrap {
+            width: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .legend-name {
+            font-size: 13px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .legend-pts {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Design do Ranking */
+        .ranking-container {
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 160px;
+            overflow-y: auto;
+        }
+
+        .ranking-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .ranking-row:last-child { border-bottom: none; }
+        .ranking-player-info { display: flex; align-items: center; gap: 8px; text-align: left; }
+        .ranking-name { font-weight: 600; color: #fff; }
+        .ranking-class { font-size: 11px; color: var(--muted); }
+        .ranking-score { font-weight: 700; color: var(--yellow); }
+
+        /* Botões Layout Duplo Padrão */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button.action-btn {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            padding: 15px;
+            cursor: pointer;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        }
+
+        button.sec-btn {
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: none;
+        }
+
+        .reward-section {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 12px;
+            border-radius: 16px;
+            margin: 10px 0;
+            font-size: 13px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .hidden { display: none !important; }
+        
+        .pop-score {
+            position: absolute;
+            color: var(--yellow);
+            font-weight: 700;
+            font-size: 16px;
+            animation: fadeUp 0.6s ease-out forwards;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-30px); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-wrapper">
+        <div class="flags-container">
+            <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+            <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+            <div class="flag"></div><div class="flag"></div><div class="flag"></div>
+        </div>
+
+        <div id="modal-start" class="screen-overlay">
+            <div class="screen-content">
+                <div style="font-size: 45px; margin-bottom: 5px;">🎣</div>
+                <h2>Pescaria do Arraiá</h2>
+                <p>Arraste o anzol rápido! A hitbox está menor e os peixes estão super velozes.</p>
+                
+                <div class="legend-box">
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-fish-wrap"><span class="legend-fish fish-azul">🐟</span></div>
+                            <span class="legend-name">Azul (Lento)</span>
+                        </div>
+                        <span class="legend-pts" style="color: #3b82f6">+10 pts</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-fish-wrap"><span class="legend-fish fish-verde">🐟</span></div>
+                            <span class="legend-name">Verde (Normal)</span>
+                        </div>
+                        <span class="legend-pts" style="color: #22c55e">+20 pts</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-fish-wrap"><span class="legend-fish fish-amarelo">🐟</span></div>
+                            <span class="legend-name">Amarelo (Rápido)</span>
+                        </div>
+                        <span class="legend-pts" style="color: #facc15">+35 pts</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-fish-wrap"><span class="legend-fish fish-roxo">🐟</span></div>
+                            <span class="legend-name">Roxo (Muito Rápido)</span>
+                        </div>
+                        <span class="legend-pts" style="color: #a855f7">+50 pts</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <div class="legend-fish-wrap"><span class="legend-fish fish-vermelho">🐟</span></div>
+                            <span class="legend-name">Vermelho (Frenético)</span>
+                        </div>
+                        <span class="legend-pts" style="color: #ef4444">+100 pts</span>
+                    </div>
+                </div>
+
+                <p style="font-size: 13px; color: var(--yellow); font-weight: 600;">⏱️ Tempo: 45s | 🎯 Meta do Pacote: 1000 pts</p>
+                <button class="action-btn" onclick="startGame()">Começar Pescaria</button>
+            </div>
+        </div>
+
+        <div class="hud-container">
+            <div>Tempo: <span id="txt-time" class="hud-val">45s</span></div>
+            <div>Pontuação: <span id="txt-score" class="hud-val">0 pts</span></div>
+        </div>
+
+        <div class="river-area" id="river">
+            <div id="dynamic-line" class="dynamic-line"></div>
+            <div id="hook" class="movable-hook">🪝</div>
+        </div>
+
+        <div id="modal-end" class="screen-overlay hidden">
+            <div class="screen-content">
+                <div style="font-size: 35px; margin-bottom: 5px;">🎉🏆</div>
+                <h2>Tempo Esgotado!</h2>
+                
+                <div class="reward-section">
+                    Sua Pontuação Total: <b id="final-score" style="color: var(--yellow); font-size: 16px;">0 pts</b>
+                    <div id="reward-status" style="margin-top: 4px; font-size: 12px;">Processando...</div>
+                </div>
+
+                <h3 style="font-size: 13px; text-align: left; margin: 8px 0 4px 2px; color: #cbd5e1;">🏆 Top 10 Pescadores</h3>
+                <div class="ranking-container" id="ranking-list">
+                    <div style="padding: 20px; color: var(--muted); font-size: 12px;">Carregando classificação...</div>
+                </div>
+
+                <div class="button-group">
+                    <button class="action-btn" style="background: linear-gradient(180deg, var(--green), #16a34a);" onclick="restartGame()">Jogar Novamente</button>
+                    <button class="action-btn sec-btn" onclick="goAlbum()">Voltar ao Álbum</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+    <script src="../menu/menu.js"></script>
+
+    <script>
+        const player = JSON.parse(localStorage.getItem("player"));
+        if (!player) window.location.href = "../index.html";
+
+        const missionSlug = "pescaria";
+        
+        let score = 0;
+        let timeLeft = 45;
+        let gameActive = false;
+        let packageUnlocked = false;
+
+        const river = document.getElementById('river');
+        const hook = document.getElementById('hook');
+        const line = document.getElementById('dynamic-line');
+
+        const fishConfig = [
+            { class: 'fish-azul', points: 10, speed: 3.5, spawnWeight: 0.45 },
+            { class: 'fish-verde', points: 20, speed: 2.5, spawnWeight: 0.25 },
+            { class: 'fish-amarelo', points: 35, speed: 1.8, spawnWeight: 0.15 },
+            { class: 'fish-roxo', points: 50, speed: 1.2, spawnWeight: 0.10 },
+            { class: 'fish-vermelho', points: 100, speed: 0.8, spawnWeight: 0.05 }
+        ];
+
+        let activeFishes = [];
+
+        function startGame() {
+            document.getElementById('modal-start').classList.add('hidden');
+            document.getElementById('modal-end').classList.add('hidden');
+            gameActive = true;
+            setupDragControls();
+            
+            for (let i = 0; i < 6; i++) {
+                spawnFish(i * 65 + 40);
+            }
+
+            requestAnimationFrame(gameLoop);
+
+            const timer = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(timer);
+                    return;
+                }
+                timeLeft--;
+                const timerEl = document.getElementById('txt-time');
+                timerEl.innerText = `${timeLeft}s`;
+
+                if (timeLeft <= 7) {
+                    timerEl.classList.add('timer-low');
+                } else {
+                    timerEl.classList.remove('timer-low');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // Modificado para mandar o jogador de volta para a Tela Inicial
+        function restartGame() {
+            // Limpa peixes antigos do rio
+            activeFishes.forEach(f => f.element.remove());
+            activeFishes = [];
+            
+            // Reseta variáveis de controle
+            score = 0;
+            timeLeft = 45;
+            packageUnlocked = false;
+
+            // Reseta os displays do HUD
+            document.getElementById('txt-score').innerText = "0 pts";
+            document.getElementById('txt-time').innerText = "45s";
+            document.getElementById('ranking-list').innerHTML = `<div style="padding: 20px; color: var(--muted); font-size: 12px;">Carregando classificação...</div>`;
+
+            // Oculta a tela final e revela a tela inicial (Legenda)
+            document.getElementById('modal-end').classList.add('hidden');
+            document.getElementById('modal-start').classList.remove('hidden');
+        }
+
+        function setupDragControls() {
+            const moveHandler = (e) => {
+                if (!gameActive) return;
+                const rect = river.getBoundingClientRect();
+                
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                let x = clientX - rect.left;
+                let y = clientY - rect.top;
+
+                if (x < 15) x = 15;
+                if (x > rect.width - 15) x = rect.width - 15;
+                if (y < 15) y = 15;
+                if (y > rect.height - 15) y = rect.height - 15;
+
+                hook.style.left = `${x}px`;
+                hook.style.top = `${y}px`;
+
+                line.style.left = `${x}px`;
+                line.style.height = `${y}px`;
+            };
+
+            river.addEventListener('mousemove', moveHandler);
+            river.addEventListener('touchmove', moveHandler, { passive: true });
+        }
+
+        function spawnFish(forcedY) {
+            if (!gameActive) return;
+
+            let rand = Math.random();
+            let selectedType = fishConfig[0];
+            let sum = 0;
+            for (let i = 0; i < fishConfig.length; i++) {
+                sum += fishConfig[i].spawnWeight;
+                if (rand <= sum) {
+                    selectedType = fishConfig[i];
+                    break;
+                }
+            }
+
+            const fishEl = document.createElement('div');
+            fishEl.className = `fish ${selectedType.class}`;
+            fishEl.innerText = '🐟';
+
+            const yPos = forcedY || (Math.random() * (river.clientHeight - 80) + 40);
+            fishEl.style.top = `${yPos}px`;
+
+            const swimDir = Math.random() > 0.5 ? 'L2R' : 'R2L';
+            const animName = swimDir === 'L2R' ? 'swimL2R' : 'swimR2L';
+            fishEl.style.animation = `${animName} ${selectedType.speed}s linear infinite`;
+
+            river.appendChild(fishEl);
+
+            activeFishes.push({ element: fishEl, points: selectedType.points });
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            const hookRect = hook.getBoundingClientRect();
+            const hCenterX = hookRect.left + (hookRect.width / 2);
+            const hCenterY = hookRect.top + (hookRect.height / 2);
+            const tolerance = 12; 
+
+            activeFishes.forEach((fish, index) => {
+                const fishRect = fish.element.getBoundingClientRect();
+                const fCenterX = fishRect.left + (fishRect.width / 2);
+                const fCenterY = fishRect.top + (fishRect.height / 2);
+
+                if (Math.abs(hCenterX - fCenterX) < tolerance + 8 && Math.abs(hCenterY - fCenterY) < tolerance + 4) {
+                    triggerCatch(fish, index);
+                }
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function triggerCatch(fish, index) {
+            score += fish.points;
+            document.getElementById('txt-score').innerText = `${score} pts`;
+
+            const pop = document.createElement('div');
+            pop.className = 'pop-score';
+            pop.innerText = `+${fish.points}`;
+            pop.style.left = hook.style.left;
+            pop.style.top = `calc(${hook.style.top} - 25px)`;
+            river.appendChild(pop);
+            setTimeout(() => pop.remove(), 600);
+
+            fish.element.remove();
+            activeFishes.splice(index, 1);
+
+            if (score >= 1000 && !packageUnlocked) {
+                packageUnlocked = true;
+                saveProgressToSupabase(true);
+            }
+
+            setTimeout(() => spawnFish(), 700);
+        }
+
+        function endGame() {
+            gameActive = false;
+            document.getElementById('modal-end').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} pts`;
+            saveProgressToSupabase(false);
+        }
+
+        async function saveProgressToSupabase(isMidGameRegistration) {
+            try {
+                if (!isMidGameRegistration) {
+                    const { data: scores } = await client.from("mission_scores")
+                        .select("*")
+                        .eq("player_id", player.id)
+                        .eq("mission_slug", missionSlug);
+
+                    if (!scores || scores.length === 0) {
+                        await client.from("mission_scores").insert([{ player_id: player.id, mission_slug: missionSlug, score: score }]);
+                    } else if (score > scores[0].score) {
+                        await client.from("mission_scores").update({ score: score }).eq("id", scores[0].id);
+                    }
+                    fetchTop10();
+                }
+
+                const { data: rewards } = await client.from("mission_rewards")
+                    .select("*")
+                    .eq("player_id", player.id)
+                    .eq("mission_slug", missionSlug);
+
+                if (!rewards || rewards.length === 0) {
+                    await client.from("mission_rewards").insert([{ 
+                        player_id: player.id, mission_slug: missionSlug, reward_type: "pack", reward_value: 1, unlocked: true, claimed: false 
+                    }]);
+                    document.getElementById('reward-status').innerHTML = `🎉 <b>Meta batida!</b> Seu Pacote Junino foi enviado para o Álbum!`;
+                } else {
+                    document.getElementById('reward-status').innerHTML = `🎁 Sua pontuação foi gravada com sucesso!`;
+                }
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchTop10() {
+            try {
+                const { data, error } = await client.from("mission_scores")
+                    .select(`score, player_id, players(name, emoji, turma_area)`)
+                    .eq("mission_slug", missionSlug)
+                    .order("score", { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const listContainer = document.getElementById("ranking-list");
+                listContainer.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    listContainer.innerHTML = `<div style="padding:15px; color:var(--muted); font-size:12px;">Nenhum recorde registrado ainda.</div>`;
+                    return;
+                }
+
+                data.forEach((row, i) => {
+                    const prof = row.players || { name: "Anônimo", emoji: "👤", turma_area: "N/A" };
+                    let medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`;
+
+                    listContainer.innerHTML += `
+                        <div class="ranking-row">
+                            <div class="ranking-player-info">
+                                <span style="font-size:12px; font-weight:700; width:22px; display:inline-block;">${medal}</span>
+                                <span style="font-size:15px;">${prof.emoji || '👤'}</span>
+                                <div>
+                                    <div class="ranking-name">${prof.name}</div>
+                                    <div class="ranking-class">${prof.turma_area || ''}</div>
+                                </div>
+                            </div>
+                            <span class="ranking-score">${row.score} pts</span>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error("Erro ao puxar ranking: ", err);
+            }
+        }
+    </script>
+</body>
+
+</html>
